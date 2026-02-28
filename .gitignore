@@ -1,0 +1,11 @@
+sampledata/
+*.pyc
+__pycache__/
+node_modules/
+dist/
+.env
+pgdata/
+.DS_Store
+*.json.bak
+*.docx
+*.tsbuildinfo

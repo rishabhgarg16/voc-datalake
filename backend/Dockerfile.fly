@@ -1,0 +1,42 @@
+# Production Dockerfile for Fly.io deployment
+# Multi-stage build for smaller final image
+
+# --- Stage 1: Install dependencies ---
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# --- Stage 2: Production image ---
+FROM python:3.11-slim
+
+# Security: run as non-root user
+RUN groupadd -r appuser && useradd -r -g appuser -d /code -s /sbin/nologin appuser
+
+WORKDIR /code
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy only application code (no tests, no sample data)
+COPY app/ ./app/
+
+# Own the working directory
+RUN chown -R appuser:appuser /code
+
+USER appuser
+
+EXPOSE 8000
+
+# Production CMD: no --reload, workers tuned for Fly.io shared-cpu-1x
+CMD ["uvicorn", "app.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--workers", "2", \
+     "--loop", "uvloop", \
+     "--http", "httptools", \
+     "--log-level", "info", \
+     "--proxy-headers", \
+     "--forwarded-allow-ips", "*"]
