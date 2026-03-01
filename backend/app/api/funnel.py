@@ -1,8 +1,11 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 
 from app.db import fetch_one
 
 router = APIRouter(tags=["funnel"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/brands/{brand_id}/funnel")
@@ -11,9 +14,13 @@ async def conversion_funnel(brand_id: int):
     if not brand:
         raise HTTPException(status_code=404, detail="Brand not found")
 
-    funnel = await fetch_one(
-        "SELECT * FROM mv_conversion_funnel WHERE brand_id = $1", brand_id
-    )
+    try:
+        funnel = await fetch_one(
+            "SELECT * FROM mv_conversion_funnel WHERE brand_id = $1", brand_id
+        )
+    except Exception as e:
+        logger.exception("Failed to fetch conversion funnel data")
+        raise HTTPException(status_code=500, detail="Database query failed")
 
     if not funnel:
         return {

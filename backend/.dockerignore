@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.git/
+.env
+*.md
+sampledata/
+frontend/
+.github/
+*.docx
+enrich.mjs
+node_modules/

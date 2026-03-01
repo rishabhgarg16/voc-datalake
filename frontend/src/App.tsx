@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 import Dashboard from './pages/Dashboard';
 import VoCPage from './pages/VoCPage';
 import ChannelPage from './pages/ChannelPage';
@@ -86,20 +87,22 @@ export default function App() {
     <ThemeContext.Provider value={{ dark, toggle }}>
       <BrandContext.Provider value={{ brands, selectedBrandId, setSelectedBrandId }}>
         <TooltipProvider delayDuration={200}>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/voc" element={<VoCPage />} />
-              <Route path="/channels" element={<ChannelPage />} />
-              <Route path="/competitors" element={<CompetitorsPage />} />
-              <Route path="/products" element={<ProductPage />} />
-              <Route path="/personas" element={<PersonasPage />} />
-              <Route path="/interventions" element={<InterventionsPage />} />
-              <Route path="/sessions" element={<SessionsPage />} />
-              <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
-              <Route path="/ask" element={<AskPage />} />
-            </Route>
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/voc" element={<VoCPage />} />
+                <Route path="/channels" element={<ChannelPage />} />
+                <Route path="/competitors" element={<CompetitorsPage />} />
+                <Route path="/products" element={<ProductPage />} />
+                <Route path="/personas" element={<PersonasPage />} />
+                <Route path="/interventions" element={<InterventionsPage />} />
+                <Route path="/sessions" element={<SessionsPage />} />
+                <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
+                <Route path="/ask" element={<AskPage />} />
+              </Route>
+            </Routes>
+          </ErrorBoundary>
         </TooltipProvider>
       </BrandContext.Provider>
     </ThemeContext.Provider>

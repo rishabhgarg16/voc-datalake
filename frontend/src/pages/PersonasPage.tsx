@@ -106,7 +106,8 @@ export default function PersonasPage() {
                 Highest Conv Rate
               </p>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {highestConv.toFixed(1)}%
+                {/* conversion_rate needs backend support */}
+                --
               </p>
             </div>
           </CardContent>
@@ -175,8 +176,9 @@ export default function PersonasPage() {
                       <TrendingUp className="h-3.5 w-3.5" />
                       Conv Rate
                     </span>
-                    <span className="font-semibold tabular-nums">
-                      {seg.conversion_rate.toFixed(1)}%
+                    <span className="font-semibold tabular-nums text-muted-foreground">
+                      {/* conversion_rate needs backend support */}
+                      --
                     </span>
                   </div>
 
@@ -185,8 +187,9 @@ export default function PersonasPage() {
                       <Activity className="h-3.5 w-3.5" />
                       Engagement
                     </span>
-                    <span className="font-semibold tabular-nums">
-                      {seg.avg_engagement.toFixed(1)}
+                    <span className="font-semibold tabular-nums text-muted-foreground">
+                      {/* avg_engagement needs backend support */}
+                      --
                     </span>
                   </div>
 

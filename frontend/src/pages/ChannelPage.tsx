@@ -178,15 +178,15 @@ export default function ChannelPage() {
                     <TableCell className="text-right">
                       <Badge
                         variant={
-                          ch.conversion_rate >= 5
+                          ch.conversion_rate * 100 >= 5
                             ? 'default'
-                            : ch.conversion_rate >= 2
+                            : ch.conversion_rate * 100 >= 2
                             ? 'secondary'
                             : 'outline'
                         }
                         className="text-xs tabular-nums"
                       >
-                        {ch.conversion_rate.toFixed(1)}%
+                        {(ch.conversion_rate * 100).toFixed(1)}%
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">

@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -5,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.db import fetch_all, fetch_one
 
 router = APIRouter(tags=["sessions"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/brands/{brand_id}/sessions")
@@ -75,29 +77,33 @@ async def list_sessions(
     where_clause = " AND ".join(conditions)
     offset = (page - 1) * page_size
 
-    # Get total count
-    count_row = await fetch_one(
-        f"SELECT COUNT(*) AS cnt FROM user_sessions us WHERE {where_clause}",
-        *args,
-    )
-    total = count_row["cnt"] if count_row else 0
+    try:
+        # Get total count
+        count_row = await fetch_one(
+            f"SELECT COUNT(*) AS cnt FROM user_sessions us WHERE {where_clause}",
+            *args,
+        )
+        total = count_row["cnt"] if count_row else 0
 
-    # Get page of sessions
-    args_with_pagination = args + [page_size, offset]
-    rows = await fetch_all(
-        f"""
-        SELECT
-            us.id, us.session_id, us.engagement_score,
-            us.visit_count, us.is_returning, us.has_talked_to_bot,
-            us.has_placed_order, us.synced_at,
-            us.scroll_percentage, us.time_on_page_ms
-        FROM user_sessions us
-        WHERE {where_clause}
-        ORDER BY us.id DESC
-        LIMIT ${idx} OFFSET ${idx + 1}
-        """,
-        *args_with_pagination,
-    )
+        # Get page of sessions
+        args_with_pagination = args + [page_size, offset]
+        rows = await fetch_all(
+            f"""
+            SELECT
+                us.id, us.session_id, us.engagement_score,
+                us.visit_count, us.is_returning, us.has_talked_to_bot,
+                us.has_placed_order, us.synced_at,
+                us.scroll_percentage, us.time_on_page_ms
+            FROM user_sessions us
+            WHERE {where_clause}
+            ORDER BY us.id DESC
+            LIMIT ${idx} OFFSET ${idx + 1}
+            """,
+            *args_with_pagination,
+        )
+    except Exception as e:
+        logger.exception("Failed to fetch sessions data")
+        raise HTTPException(status_code=500, detail="Database query failed")
 
     return {
         "brand_id": brand_id,
@@ -127,69 +133,73 @@ async def session_detail(brand_id: int, session_id: str):
 
     us_id = profile["id"]
 
-    # Pages
-    pages = await fetch_all(
-        "SELECT * FROM session_pages WHERE session_id = $1 ORDER BY page_timestamp",
-        us_id,
-    )
+    try:
+        # Pages
+        pages = await fetch_all(
+            "SELECT * FROM session_pages WHERE session_id = $1 ORDER BY page_timestamp",
+            us_id,
+        )
 
-    # Events
-    events = await fetch_all(
-        "SELECT * FROM session_events WHERE session_id = $1 ORDER BY event_timestamp",
-        us_id,
-    )
+        # Events
+        events = await fetch_all(
+            "SELECT * FROM session_events WHERE session_id = $1 ORDER BY event_timestamp",
+            us_id,
+        )
 
-    # Interventions
-    interventions = await fetch_all(
-        "SELECT * FROM session_interventions WHERE session_id = $1 ORDER BY triggered_at",
-        us_id,
-    )
+        # Interventions
+        interventions = await fetch_all(
+            "SELECT * FROM session_interventions WHERE session_id = $1 ORDER BY triggered_at",
+            us_id,
+        )
 
-    # Chat conversation + messages
-    conversation = await fetch_one(
-        """
-        SELECT * FROM chat_conversations
-        WHERE brand_id = $1 AND session_id = $2
-        """,
-        brand_id, session_id,
-    )
-
-    chat_messages = []
-    if conversation:
-        chat_messages = await fetch_all(
+        # Chat conversation + messages
+        conversation = await fetch_one(
             """
-            SELECT actor, message_text, created_at, message_order
-            FROM chat_messages
-            WHERE conversation_id = $1
-            ORDER BY message_order
+            SELECT * FROM chat_conversations
+            WHERE brand_id = $1 AND session_id = $2
             """,
-            conversation["id"],
+            brand_id, session_id,
         )
 
-    # Enrichment
-    enrichment = await fetch_one(
-        """
-        SELECT * FROM enriched_conversations
-        WHERE brand_id = $1 AND session_id = $2
-        """,
-        brand_id, session_id,
-    )
+        chat_messages = []
+        if conversation:
+            chat_messages = await fetch_all(
+                """
+                SELECT actor, message_text, created_at, message_order
+                FROM chat_messages
+                WHERE conversation_id = $1
+                ORDER BY message_order
+                """,
+                conversation["id"],
+            )
 
-    # Order
-    order = await fetch_one(
-        """
-        SELECT * FROM orders
-        WHERE brand_id = $1 AND verifast_session = $2
-        """,
-        brand_id, session_id,
-    )
-
-    order_items = []
-    if order:
-        order_items = await fetch_all(
-            "SELECT * FROM order_line_items WHERE order_id = $1",
-            order["id"],
+        # Enrichment
+        enrichment = await fetch_one(
+            """
+            SELECT * FROM enriched_conversations
+            WHERE brand_id = $1 AND session_id = $2
+            """,
+            brand_id, session_id,
         )
+
+        # Order
+        order = await fetch_one(
+            """
+            SELECT * FROM orders
+            WHERE brand_id = $1 AND verifast_session = $2
+            """,
+            brand_id, session_id,
+        )
+
+        order_items = []
+        if order:
+            order_items = await fetch_all(
+                "SELECT * FROM order_line_items WHERE order_id = $1",
+                order["id"],
+            )
+    except Exception as e:
+        logger.exception("Failed to fetch session detail data")
+        raise HTTPException(status_code=500, detail="Database query failed")
 
     return {
         "brand_id": brand_id,

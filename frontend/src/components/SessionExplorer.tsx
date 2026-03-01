@@ -132,9 +132,9 @@ export default function SessionExplorer() {
                     <TableCell className="text-right">
                       <Badge
                         variant={
-                          s.engagement_score >= 7
+                          s.engagement_score >= 0.7
                             ? 'default'
-                            : s.engagement_score >= 4
+                            : s.engagement_score >= 0.4
                             ? 'secondary'
                             : 'outline'
                         }
@@ -169,7 +169,7 @@ export default function SessionExplorer() {
         <Button
           variant="outline"
           size="sm"
-          disabled={sessions.length < 20}
+          disabled={sessions.length < 50}
           onClick={() => setPage((p) => p + 1)}
         >
           Next

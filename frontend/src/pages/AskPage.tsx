@@ -13,7 +13,6 @@ import {
   Send,
   Loader2,
   Sparkles,
-  Quote,
   Bot,
   User,
 } from 'lucide-react';
@@ -21,7 +20,7 @@ import {
 interface Message {
   type: 'user' | 'ai';
   content: string;
-  sources?: Array<{ quote: string; session_id: string }>;
+  conversationsAnalyzed?: number;
 }
 
 const SAMPLE_QUESTIONS = [
@@ -57,7 +56,7 @@ export default function AskPage() {
       const res: AskResponse = await askCustomers(selectedBrandId, question);
       setMessages((prev) => [
         ...prev,
-        { type: 'ai', content: res.answer, sources: res.sources },
+        { type: 'ai', content: res.answer, conversationsAnalyzed: res.conversations_analyzed },
       ]);
     } catch {
       setMessages((prev) => [
@@ -151,27 +150,11 @@ export default function AskPage() {
                     {msg.content}
                   </p>
 
-                  {/* Sources */}
-                  {msg.sources && msg.sources.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-border space-y-2">
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                        Sources
-                      </p>
-                      {msg.sources.map((src, si) => (
-                        <div
-                          key={si}
-                          className="flex items-start gap-2 text-xs bg-muted rounded-lg px-3 py-2 border-l-2 border-indigo-400"
-                        >
-                          <Quote className="h-3 w-3 flex-shrink-0 mt-0.5 opacity-50" />
-                          <div>
-                            <p className="italic text-muted-foreground">{src.quote}</p>
-                            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
-                              Session: {src.session_id.substring(0, 12)}...
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  {/* Conversations analyzed count */}
+                  {msg.conversationsAnalyzed !== undefined && msg.conversationsAnalyzed > 0 && (
+                    <p className="mt-2 text-[10px] text-muted-foreground">
+                      Based on {msg.conversationsAnalyzed} conversation{msg.conversationsAnalyzed !== 1 ? 's' : ''} analyzed
+                    </p>
                   )}
                 </div>
               </div>

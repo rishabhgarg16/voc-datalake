@@ -16,12 +16,13 @@ import sys
 import time
 
 import psycopg2
+from psycopg2 import sql
 
 from app.config import settings
 
 
 def _table_count(cur, table: str) -> int:
-    cur.execute(f"SELECT COUNT(*) FROM {table}")
+    cur.execute(sql.SQL("SELECT COUNT(*) FROM {}").format(sql.Identifier(table)))
     return cur.fetchone()[0]
 
 

@@ -39,29 +39,32 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
   const items: TimelineItem[] = [];
 
   d.pages?.forEach((p) => {
+    const ts = p.page_timestamp;
+    const time = typeof ts === 'number' ? new Date(ts).toISOString() : (ts as string) || '';
     items.push({
-      time: (p.viewed_at as string) || '',
+      time,
       type: 'page',
-      title: `Viewed: ${(p.page_path as string) || (p.url as string) || 'Page'}`,
-      detail: p.title as string,
+      title: `Viewed: ${(p.page_url as string) || 'Page'}`,
     });
   });
 
   d.events?.forEach((e) => {
+    const ts = e.event_timestamp;
+    const time = typeof ts === 'number' ? new Date(ts).toISOString() : (ts as string) || '';
     items.push({
-      time: (e.timestamp as string) || (e.created_at as string) || '',
+      time,
       type: 'event',
-      title: `Event: ${(e.event_type as string) || (e.name as string) || 'Unknown'}`,
+      title: `Event: ${(e.event_name as string) || 'Unknown'}`,
       detail: (e.detail as string) || (e.metadata as string) || undefined,
     });
   });
 
   d.interventions?.forEach((n) => {
     items.push({
-      time: (n.triggered_at as string) || (n.timestamp as string) || '',
+      time: (n.triggered_at as string) || '',
       type: 'nudge',
-      title: `Nudge: ${(n.trigger_type as string) || (n.type as string) || 'Intervention'}`,
-      detail: (n.message as string) || undefined,
+      title: `Nudge: ${(n.trigger_type as string) || 'Intervention'}`,
+      detail: (n.nudge_text as string) || undefined,
     });
   });
 
@@ -70,7 +73,7 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
       time: (d.order.created_at as string) || '',
       type: 'order',
       title: 'Order Placed',
-      detail: `$${((d.order.total_price as number) || 0).toLocaleString()}`,
+      detail: `$${((d.order.subtotal_amount as number) || 0).toLocaleString()}`,
     });
   }
 
@@ -111,14 +114,10 @@ export default function SessionDetailPage() {
       .finally(() => setLoading(false));
   }, [selectedBrandId, sessionId]);
 
-  /* Chat messages -- normalize from object or array */
+  /* Chat messages -- from detail.chat_messages (backend returns separate keys) */
   const chatMessages: Array<Record<string, unknown>> | null =
-    detail?.chat
-      ? Array.isArray(detail.chat)
-        ? detail.chat
-        : (detail.chat as Record<string, unknown>).messages
-        ? ((detail.chat as Record<string, unknown>).messages as Array<Record<string, unknown>>)
-        : null
+    detail?.chat_messages && detail.chat_messages.length > 0
+      ? detail.chat_messages
       : null;
 
   /* Enrichment data */
@@ -270,12 +269,10 @@ export default function SessionDetailPage() {
                   <div className="space-y-3 pr-3">
                     {chatMessages.map((msg, idx) => {
                       const role = (
-                        (msg.role as string) ||
-                        (msg.sender as string) ||
-                        'unknown'
+                        (msg.actor as string) || 'unknown'
                       ).toLowerCase();
                       const content =
-                        (msg.content as string) || (msg.message as string) || '';
+                        (msg.message_text as string) || '';
                       const isAgent =
                         role === 'agent' || role === 'assistant' || role === 'bot';
 

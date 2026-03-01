@@ -53,7 +53,7 @@ export default function ProductPage() {
   const totalViews = products.reduce((s, p) => s + p.view_count, 0);
   const avgConv =
     products.length > 0
-      ? products.reduce((s, p) => s + p.conversion_rate, 0) / products.length
+      ? (products.reduce((s, p) => s + p.conversion_rate, 0) / products.length) * 100
       : 0;
 
   return (
@@ -159,15 +159,15 @@ export default function ProductPage() {
                     <TableCell className="text-right pr-6">
                       <Badge
                         variant={
-                          product.conversion_rate >= 5
+                          product.conversion_rate * 100 >= 5
                             ? 'default'
-                            : product.conversion_rate >= 2
+                            : product.conversion_rate * 100 >= 2
                             ? 'secondary'
                             : 'outline'
                         }
                         className="text-xs tabular-nums"
                       >
-                        {product.conversion_rate.toFixed(1)}%
+                        {(product.conversion_rate * 100).toFixed(1)}%
                       </Badge>
                     </TableCell>
                   </TableRow>

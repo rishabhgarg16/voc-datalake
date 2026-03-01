@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 import ssl
 import logging
 
@@ -8,11 +9,17 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 pool: asyncpg.Pool | None = None
+_pool_lock = asyncio.Lock()
 
 
 async def get_pool() -> asyncpg.Pool:
     global pool
-    if pool is None:
+    if pool is not None:
+        return pool
+    async with _pool_lock:
+        # Double-check after acquiring lock
+        if pool is not None:
+            return pool
         dsn = settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
         kwargs: dict = {"dsn": dsn, "min_size": 2, "max_size": 10}
         # Supabase and most cloud DBs require SSL

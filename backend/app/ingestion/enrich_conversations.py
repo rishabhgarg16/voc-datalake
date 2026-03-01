@@ -164,90 +164,93 @@ async def enrich_one(
 
             data = json.loads(raw)
 
-            # 5. Insert enriched_conversations
-            await pool.execute(
-                """
-                INSERT INTO enriched_conversations (
-                    conversation_id, brand_id, session_id, outcome,
-                    primary_intent, purchase_readiness, price_sensitivity, knowledge_level,
-                    objections, competitor_mentions, product_feedback,
-                    information_gaps, demand_signals,
-                    sentiment_score, sentiment_trajectory, emotional_state,
-                    persona_tags, purchase_blockers,
-                    enrichment_model, enrichment_version, enriched_at
-                ) VALUES (
-                    $1, $2, $3, $4,
-                    $5, $6, $7, $8,
-                    $9, $10, $11,
-                    $12, $13,
-                    $14, $15, $16,
-                    $17, $18,
-                    $19, 1, NOW()
-                )
-                ON CONFLICT (conversation_id) DO NOTHING
-                """,
-                conv_id,
-                brand_id,
-                session_id,
-                outcome,
-                data.get("primary_intent"),
-                data.get("purchase_readiness"),
-                data.get("price_sensitivity"),
-                data.get("knowledge_level"),
-                json.dumps(data.get("objections", [])),
-                json.dumps(data.get("competitor_mentions", [])),
-                json.dumps(data.get("product_feedback", [])),
-                json.dumps(data.get("information_gaps", [])),
-                json.dumps(data.get("demand_signals", [])),
-                data.get("sentiment", {}).get("score"),
-                data.get("sentiment", {}).get("trajectory"),
-                data.get("sentiment", {}).get("emotional_state"),
-                data.get("persona_tags", []),
-                data.get("purchase_blockers", []),
-                settings.enrichment_model,
-            )
+            # 5-7. Insert enriched data in a single transaction
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    # 5. Insert enriched_conversations
+                    await conn.execute(
+                        """
+                        INSERT INTO enriched_conversations (
+                            conversation_id, brand_id, session_id, outcome,
+                            primary_intent, purchase_readiness, price_sensitivity, knowledge_level,
+                            objections, competitor_mentions, product_feedback,
+                            information_gaps, demand_signals,
+                            sentiment_score, sentiment_trajectory, emotional_state,
+                            persona_tags, purchase_blockers,
+                            enrichment_model, enrichment_version, enriched_at
+                        ) VALUES (
+                            $1, $2, $3, $4,
+                            $5, $6, $7, $8,
+                            $9, $10, $11,
+                            $12, $13,
+                            $14, $15, $16,
+                            $17, $18,
+                            $19, 1, NOW()
+                        )
+                        ON CONFLICT (conversation_id) DO NOTHING
+                        """,
+                        conv_id,
+                        brand_id,
+                        session_id,
+                        outcome,
+                        data.get("primary_intent"),
+                        data.get("purchase_readiness"),
+                        data.get("price_sensitivity"),
+                        data.get("knowledge_level"),
+                        json.dumps(data.get("objections", [])),
+                        json.dumps(data.get("competitor_mentions", [])),
+                        json.dumps(data.get("product_feedback", [])),
+                        json.dumps(data.get("information_gaps", [])),
+                        json.dumps(data.get("demand_signals", [])),
+                        data.get("sentiment", {}).get("score"),
+                        data.get("sentiment", {}).get("trajectory"),
+                        data.get("sentiment", {}).get("emotional_state"),
+                        data.get("persona_tags", []),
+                        data.get("purchase_blockers", []),
+                        settings.enrichment_model,
+                    )
 
-            # 6. Insert competitor_mentions (denormalized)
-            for cm in data.get("competitor_mentions", []):
-                if not cm.get("competitor_name"):
-                    continue
-                await pool.execute(
-                    """
-                    INSERT INTO competitor_mentions (
-                        brand_id, conversation_id, session_id,
-                        competitor_name, mention_context,
-                        sentiment_vs_brand, verbatim_quote, outcome
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                    """,
-                    brand_id,
-                    conv_id,
-                    session_id,
-                    cm["competitor_name"],
-                    cm.get("context"),
-                    cm.get("sentiment_vs_brand"),
-                    cm.get("verbatim_quote"),
-                    outcome,
-                )
+                    # 6. Insert competitor_mentions (denormalized)
+                    for cm in data.get("competitor_mentions", []):
+                        if not cm.get("competitor_name"):
+                            continue
+                        await conn.execute(
+                            """
+                            INSERT INTO competitor_mentions (
+                                brand_id, conversation_id, session_id,
+                                competitor_name, mention_context,
+                                sentiment_vs_brand, verbatim_quote, outcome
+                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                            """,
+                            brand_id,
+                            conv_id,
+                            session_id,
+                            cm["competitor_name"],
+                            cm.get("context"),
+                            cm.get("sentiment_vs_brand"),
+                            cm.get("verbatim_quote"),
+                            outcome,
+                        )
 
-            # 7. Insert information_gaps (denormalized)
-            for ig in data.get("information_gaps", []):
-                if not ig.get("customer_question"):
-                    continue
-                await pool.execute(
-                    """
-                    INSERT INTO information_gaps (
-                        brand_id, conversation_id,
-                        customer_question, agent_response_quality,
-                        shopper_reaction, product_context
-                    ) VALUES ($1, $2, $3, $4, $5, $6)
-                    """,
-                    brand_id,
-                    conv_id,
-                    ig["customer_question"],
-                    ig.get("agent_response_quality"),
-                    ig.get("shopper_reaction"),
-                    ig.get("product_context"),
-                )
+                    # 7. Insert information_gaps (denormalized)
+                    for ig in data.get("information_gaps", []):
+                        if not ig.get("customer_question"):
+                            continue
+                        await conn.execute(
+                            """
+                            INSERT INTO information_gaps (
+                                brand_id, conversation_id,
+                                customer_question, agent_response_quality,
+                                shopper_reaction, product_context
+                            ) VALUES ($1, $2, $3, $4, $5, $6)
+                            """,
+                            brand_id,
+                            conv_id,
+                            ig["customer_question"],
+                            ig.get("agent_response_quality"),
+                            ig.get("shopper_reaction"),
+                            ig.get("product_context"),
+                        )
 
             print(f"  [{progress}] conv {conv_id}: enriched ({outcome})")
 

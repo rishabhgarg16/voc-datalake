@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -5,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from app.db import fetch_all, fetch_one
 
 router = APIRouter(tags=["voc"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/brands/{brand_id}/voc/intents")
@@ -17,15 +19,19 @@ async def intent_distribution(
     if not brand:
         raise HTTPException(status_code=404, detail="Brand not found")
 
-    rows = await fetch_all(
-        """
-        SELECT primary_intent, secondary_intent, intent_count, conversion_count
-        FROM mv_intent_distribution
-        WHERE brand_id = $1
-        ORDER BY intent_count DESC
-        """,
-        brand_id,
-    )
+    try:
+        rows = await fetch_all(
+            """
+            SELECT primary_intent, secondary_intent, intent_count, conversion_count
+            FROM mv_intent_distribution
+            WHERE brand_id = $1
+            ORDER BY intent_count DESC
+            """,
+            brand_id,
+        )
+    except Exception as e:
+        logger.exception("Failed to fetch intent distribution data")
+        raise HTTPException(status_code=500, detail="Database query failed")
     return {"brand_id": brand_id, "intents": rows}
 
 
@@ -69,7 +75,11 @@ async def objections(
         ORDER BY mention_count DESC
     """
 
-    rows = await fetch_all(query, *args)
+    try:
+        rows = await fetch_all(query, *args)
+    except Exception as e:
+        logger.exception("Failed to fetch objections data")
+        raise HTTPException(status_code=500, detail="Database query failed")
     return {"brand_id": brand_id, "objections": rows}
 
 
@@ -111,7 +121,11 @@ async def non_buyers(
         ORDER BY conversation_count DESC
     """
 
-    rows = await fetch_all(query, *args)
+    try:
+        rows = await fetch_all(query, *args)
+    except Exception as e:
+        logger.exception("Failed to fetch non-buyer blockers data")
+        raise HTTPException(status_code=500, detail="Database query failed")
     return {"brand_id": brand_id, "non_buyer_blockers": rows}
 
 
@@ -152,7 +166,11 @@ async def info_gaps(
         ORDER BY frequency DESC
     """
 
-    rows = await fetch_all(query, *args)
+    try:
+        rows = await fetch_all(query, *args)
+    except Exception as e:
+        logger.exception("Failed to fetch information gaps data")
+        raise HTTPException(status_code=500, detail="Database query failed")
     return {"brand_id": brand_id, "information_gaps": rows}
 
 
@@ -162,18 +180,22 @@ async def competitors(brand_id: int):
     if not brand:
         raise HTTPException(status_code=404, detail="Brand not found")
 
-    rows = await fetch_all(
-        """
-        SELECT
-            competitor_name,
-            COUNT(*) AS mention_count,
-            string_agg(DISTINCT sentiment_vs_brand, ', ') AS sentiments,
-            string_agg(DISTINCT mention_context, ' | ') AS contexts
-        FROM competitor_mentions
-        WHERE brand_id = $1
-        GROUP BY competitor_name
-        ORDER BY mention_count DESC
-        """,
-        brand_id,
-    )
+    try:
+        rows = await fetch_all(
+            """
+            SELECT
+                competitor_name,
+                COUNT(*) AS mention_count,
+                string_agg(DISTINCT sentiment_vs_brand, ', ') AS sentiments,
+                string_agg(DISTINCT mention_context, ' | ') AS contexts
+            FROM competitor_mentions
+            WHERE brand_id = $1
+            GROUP BY competitor_name
+            ORDER BY mention_count DESC
+            """,
+            brand_id,
+        )
+    except Exception as e:
+        logger.exception("Failed to fetch competitor data")
+        raise HTTPException(status_code=500, detail="Database query failed")
     return {"brand_id": brand_id, "competitors": rows}

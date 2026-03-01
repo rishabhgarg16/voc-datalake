@@ -138,18 +138,24 @@ export interface SessionsResponse {
 }
 
 export interface SessionDetail {
+  brand_id: number;
+  session_id: string;
   profile: Record<string, unknown>;
   pages: Array<Record<string, unknown>>;
   events: Array<Record<string, unknown>>;
   interventions: Array<Record<string, unknown>>;
-  chat: Record<string, unknown> | null;
+  conversation: Record<string, unknown> | null;
+  chat_messages: Array<Record<string, unknown>>;
   enrichment: Record<string, unknown> | null;
   order: Record<string, unknown> | null;
+  order_items: Array<Record<string, unknown>>;
 }
 
 export interface AskResponse {
+  brand_id: number;
+  question: string;
   answer: string;
-  sources: Array<{ quote: string; session_id: string }>;
+  conversations_analyzed: number;
 }
 
 /* ── API functions ────────────────────────────────────────────── */
@@ -226,6 +232,7 @@ export const fetchSegments = (brandId: number) =>
       segment_name: s.segment as string,
       count: s.session_count as number,
       pct: (s.percentage as number) * 100,
+      // TODO: conversion_rate and avg_engagement need backend support (not returned by /segments endpoint)
       conversion_rate: 0,
       avg_engagement: 0,
     })) as Segment[];

@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -5,6 +6,7 @@ from fastapi import APIRouter, HTTPException
 from app.db import fetch_all, fetch_one
 
 router = APIRouter(tags=["segments"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/brands/{brand_id}/segments")
@@ -84,13 +86,18 @@ async def session_segments(
         FROM session_flags
     """
 
-    rows = await fetch_all(query, brand_id)
+    try:
+        rows = await fetch_all(query, brand_id)
 
-    # Also get total for percentages
-    total = await fetch_one(
-        "SELECT COUNT(*) AS cnt FROM user_sessions WHERE brand_id = $1",
-        brand_id,
-    )
+        # Also get total for percentages
+        total = await fetch_one(
+            "SELECT COUNT(*) AS cnt FROM user_sessions WHERE brand_id = $1",
+            brand_id,
+        )
+    except Exception as e:
+        logger.exception("Failed to fetch segment data")
+        raise HTTPException(status_code=500, detail="Database query failed")
+
     total_count = total["cnt"] if total else 0
 
     segments = []

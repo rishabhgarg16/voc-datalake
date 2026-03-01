@@ -1,7 +1,10 @@
+import asyncio
 import json
+import time
+from collections import defaultdict
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from openai import OpenAI
 
@@ -10,13 +13,32 @@ from app.db import fetch_all, fetch_one
 
 router = APIRouter(tags=["ask"])
 
+# Simple in-memory rate limiting: max 10 requests/minute per brand
+_rate_limit: dict[int, list[float]] = defaultdict(list)
+_RATE_LIMIT_MAX = 10
+_RATE_LIMIT_WINDOW = 60  # seconds
+
+
+def _check_rate_limit(brand_id: int) -> None:
+    now = time.monotonic()
+    timestamps = _rate_limit[brand_id]
+    # Remove entries older than the window
+    _rate_limit[brand_id] = [t for t in timestamps if now - t < _RATE_LIMIT_WINDOW]
+    if len(_rate_limit[brand_id]) >= _RATE_LIMIT_MAX:
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded: max 10 requests per minute per brand",
+        )
+    _rate_limit[brand_id].append(now)
+
 
 class AskRequest(BaseModel):
-    question: str
+    question: str = Field(..., max_length=500)
 
 
 @router.post("/brands/{brand_id}/ask")
 async def ask_customers(brand_id: int, body: AskRequest):
+    _check_rate_limit(brand_id)
     brand = await fetch_one(
         "SELECT id, display_name FROM brands WHERE id = $1", brand_id
     )
@@ -179,8 +201,9 @@ async def ask_customers(brand_id: int, body: AskRequest):
 
     try:
         client = OpenAI(api_key=settings.openai_api_key)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
+        response = await asyncio.to_thread(
+            client.chat.completions.create,
+            model=settings.enrichment_model,
             max_tokens=2048,
             messages=[
                 {"role": "system", "content": system_prompt},
