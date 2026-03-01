@@ -23,8 +23,7 @@ jobs:
       - name: Deploy to Railway
         run: |
           cd backend
-          railway link --project 2be0cc27-1f3c-4463-bb1e-37a929f69fb5 --service backend --environment production
-          railway up --detach
+          RAILWAY_TOKEN="${{ secrets.RAILWAY_TOKEN }}" railway up --service backend --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
