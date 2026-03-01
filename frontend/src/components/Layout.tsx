@@ -33,6 +33,7 @@ import {
   Moon,
   Sun,
   CalendarDays,
+  Download,
 } from 'lucide-react';
 
 const navItems = [
@@ -182,6 +183,22 @@ export default function Layout() {
                 <SelectItem value="90">Last 90 days</SelectItem>
               </SelectContent>
             </Select>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs gap-1.5"
+                  onClick={() => {
+                    window.print();
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Export current page as PDF</TooltipContent>
+            </Tooltip>
             <Separator orientation="vertical" className="h-6" />
             <Tooltip>
               <TooltipTrigger asChild>

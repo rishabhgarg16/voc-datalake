@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -32,6 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { Info } from 'lucide-react';
 
 /* ── KPI configuration ────────────────────────────────────────── */
 
@@ -135,6 +136,39 @@ export default function Dashboard() {
     }),
   }));
 
+  /* ── Compute funnel key insight ──────────────────────────────── */
+  const funnelInsight = useMemo(() => {
+    if (stages.length < 2) return null;
+
+    // Find the largest drop-off
+    let maxDrop = 0;
+    let maxDropIdx = 1;
+    for (let i = 1; i < stages.length; i++) {
+      if (stages[i].drop_off_pct > maxDrop) {
+        maxDrop = stages[i].drop_off_pct;
+        maxDropIdx = i;
+      }
+    }
+
+    const fromStage = stages[maxDropIdx - 1].name;
+    const toStage = stages[maxDropIdx].name;
+    const dropPct = maxDrop.toFixed(1);
+
+    // Chat conversion rate & baseline conversion rate from overview
+    const chatConvRate = overview
+      ? `${(overview.chat_conversion_rate * 100).toFixed(1)}%`
+      : '--';
+    const baselineConvRate =
+      overview && overview.conversion_rate > 0 ? overview.conversion_rate : 0;
+    const chatConvRateRaw = overview ? overview.chat_conversion_rate : 0;
+    const multiplier =
+      baselineConvRate > 0
+        ? (chatConvRateRaw / baselineConvRate).toFixed(1)
+        : '--';
+
+    return { fromStage, toStage, dropPct, chatConvRate, multiplier };
+  }, [stages, overview]);
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -161,15 +195,19 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {KPIS.map((kpi) => (
-            <Card key={kpi.key}>
+          {KPIS.map((kpi, index) => (
+            <Card
+              key={kpi.key}
+              className="animate-page-enter"
+              style={{ animationDelay: `${index * 60}ms`, animationFillMode: 'both' }}
+            >
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs font-medium uppercase tracking-wider">
                   {kpi.label}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className={cn('text-2xl font-bold', kpi.accent)}>
+                <p className={cn('text-2xl font-bold font-mono', kpi.accent)}>
                   {kpi.format(overview[kpi.key] as number)}
                 </p>
               </CardContent>
@@ -325,15 +363,53 @@ export default function Dashboard() {
             </ResponsiveContainer>
 
             <Separator className="my-4" />
+
+            {/* Drop-off severity badges */}
             <div className="flex flex-wrap gap-3">
               {stages.map((s, i) =>
                 i > 0 && s.drop_off_pct > 0 ? (
-                  <Badge key={s.name} variant="outline" className="text-xs">
+                  <Badge
+                    key={s.name}
+                    variant="outline"
+                    className={cn(
+                      'text-xs',
+                      s.drop_off_pct > 30
+                        ? 'border-red-500/50 bg-red-500/10 text-red-600 dark:text-red-400'
+                        : s.drop_off_pct > 15
+                          ? 'border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                          : 'border-border bg-muted/50 text-muted-foreground'
+                    )}
+                  >
                     {s.name}: -{s.drop_off_pct.toFixed(1)}% drop
                   </Badge>
                 ) : null,
               )}
             </div>
+
+            {/* Key Insight callout */}
+            {funnelInsight && (
+              <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-500/5 dark:bg-blue-500/10 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 flex-shrink-0 rounded-full bg-blue-500/15 p-1.5">
+                    <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1">
+                      Key Insight
+                    </p>
+                    <p className="text-sm text-foreground leading-relaxed">
+                      The largest drop-off occurs between{' '}
+                      <span className="font-semibold">{funnelInsight.fromStage}</span> →{' '}
+                      <span className="font-semibold">{funnelInsight.toStage}</span>{' '}
+                      (<span className="font-mono text-red-600 dark:text-red-400">{funnelInsight.dropPct}%</span>).
+                      Customers who chat convert at{' '}
+                      <span className="font-mono font-semibold">{funnelInsight.chatConvRate}</span> —{' '}
+                      <span className="font-mono font-semibold">{funnelInsight.multiplier}x</span> the baseline.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

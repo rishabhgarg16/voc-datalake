@@ -11,7 +11,6 @@ import ProductPage from './pages/ProductPage';
 import PersonasPage from './pages/PersonasPage';
 import InterventionsPage from './pages/InterventionsPage';
 import SessionsPage from './pages/SessionsPage';
-import SessionDetailPage from './pages/SessionDetailPage';
 import AskPage from './pages/AskPage';
 import { fetchBrands, Brand } from './api/client';
 
@@ -98,7 +97,6 @@ export default function App() {
                 <Route path="/personas" element={<PersonasPage />} />
                 <Route path="/interventions" element={<InterventionsPage />} />
                 <Route path="/sessions" element={<SessionsPage />} />
-                <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
                 <Route path="/ask" element={<AskPage />} />
               </Route>
             </Routes>

@@ -131,3 +131,12 @@ body {
 .animate-pulse-dot {
   animation: pulseDot 1.5s ease-in-out infinite;
 }
+
+/* ── Print styles for PDF export ──────────────────────────────── */
+@media print {
+  aside, header, .no-print { display: none !important; }
+  main { overflow: visible !important; }
+  .p-6 { padding: 16px !important; }
+  body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .dark { --background: 0 0% 100%; --foreground: 0 0% 0%; --card: 0 0% 98%; --card-foreground: 0 0% 0%; --border: 0 0% 85%; }
+}
