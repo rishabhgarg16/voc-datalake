@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Bot, User, Send, Loader2, Sparkles, Quote } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Markdown from 'react-markdown';
 
 interface Message {
   type: 'user' | 'ai';
@@ -135,12 +136,29 @@ export default function AskCustomers() {
                 )}
               >
                 <div className={cn(
-                  "text-sm whitespace-pre-wrap leading-relaxed",
+                  "text-sm leading-relaxed",
                   msg.type === 'user'
                     ? 'text-white'
                     : 'text-zinc-900 dark:text-zinc-100'
                 )}>
-                  {msg.content}
+                  {msg.type === 'user' ? (
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                  ) : (
+                    <Markdown
+                      components={{
+                        h3: ({ children }) => <h3 className="text-base font-semibold mt-3 mb-1.5 text-zinc-900 dark:text-zinc-50">{children}</h3>,
+                        h4: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-1 text-zinc-900 dark:text-zinc-50">{children}</h4>,
+                        p: ({ children }) => <p className="mb-2 text-zinc-800 dark:text-zinc-200">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold text-zinc-900 dark:text-zinc-50">{children}</strong>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1 text-zinc-800 dark:text-zinc-200">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1 text-zinc-800 dark:text-zinc-200">{children}</ol>,
+                        li: ({ children }) => <li className="text-zinc-800 dark:text-zinc-200">{children}</li>,
+                        code: ({ children }) => <code className="bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
+                      }}
+                    >
+                      {msg.content}
+                    </Markdown>
+                  )}
                 </div>
 
                 {msg.sources && msg.sources.length > 0 && (
