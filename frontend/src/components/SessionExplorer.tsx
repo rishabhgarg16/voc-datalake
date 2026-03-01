@@ -119,7 +119,7 @@ const PERSONA_COLORS: Record<string, string> = {
   'deal-seeker':     'bg-amber-500/15 text-amber-400 border-amber-500/30',
   'returning':       'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
   'new-visitor':     'bg-rose-500/15 text-rose-400 border-rose-500/30',
-  'default':         'bg-slate-500/15 text-slate-400 border-slate-500/30',
+  'default':         'bg-muted text-muted-foreground border-border',
 };
 
 function getPersonaColor(persona: string): string {
@@ -290,7 +290,7 @@ export default function SessionExplorer() {
                                 ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                                 : s.engagement_score >= 0.4
                                 ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                                : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
+                                : 'bg-muted text-muted-foreground border-border'
                             )}
                           >
                             {s.engagement_score?.toFixed(1) ?? '--'}
