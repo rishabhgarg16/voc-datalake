@@ -58,26 +58,25 @@ export interface Intent {
 }
 
 export interface Objection {
-  type: string;
-  count: number;
-  verbatim_quotes: string[];
-  severity_breakdown: Record<string, number>;
-  resolved_pct: number;
+  objection: string;
+  severity: string;
+  mention_count: number;
+  resolved_count: number;
+  converted_count: number;
 }
 
 export interface NonBuyer {
-  purchase_blocker: string;
-  count: number;
-  pct: number;
-  sample_quotes: string[];
+  blocker: string;
+  conversation_count: number;
+  avg_sentiment: number;
 }
 
 export interface InfoGap {
-  question: string;
+  customer_question: string;
+  agent_response_quality: string;
   frequency: number;
-  agent_quality: string;
-  shopper_reaction: string;
-  product: string;
+  most_common_reaction: string;
+  most_common_product: string;
 }
 
 export interface Segment {
@@ -93,6 +92,13 @@ export interface Product {
   view_count: number;
   unique_sessions: number;
   conversion_rate: number;
+}
+
+export interface Competitor {
+  competitor_name: string;
+  mention_count: number;
+  sentiments: string;
+  contexts: string;
 }
 
 export interface Intervention {
@@ -205,12 +211,12 @@ export const fetchObjections = (brandId: number) =>
 
 export const fetchNonBuyers = (brandId: number) =>
   api.get(`/api/brands/${brandId}/voc/non-buyers`).then((r) => {
-    return (r.data.blockers || []) as NonBuyer[];
+    return (r.data.non_buyer_blockers || []) as NonBuyer[];
   });
 
 export const fetchInfoGaps = (brandId: number) =>
   api.get(`/api/brands/${brandId}/voc/info-gaps`).then((r) => {
-    return (r.data.gaps || []) as InfoGap[];
+    return (r.data.information_gaps || []) as InfoGap[];
   });
 
 export const fetchSegments = (brandId: number) =>
@@ -228,6 +234,11 @@ export const fetchSegments = (brandId: number) =>
 export const fetchProducts = (brandId: number) =>
   api.get(`/api/brands/${brandId}/products`).then((r) => {
     return (r.data.products || []) as Product[];
+  });
+
+export const fetchCompetitors = (brandId: number) =>
+  api.get(`/api/brands/${brandId}/voc/competitors`).then((r) => {
+    return (r.data.competitors || []) as Competitor[];
   });
 
 export const fetchInterventions = (brandId: number) =>

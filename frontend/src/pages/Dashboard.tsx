@@ -64,13 +64,13 @@ const KPIS: KPIDef[] = [
   {
     label: 'Conv Rate',
     key: 'conversion_rate',
-    format: (v) => `${v.toFixed(1)}%`,
+    format: (v) => `${(v * 100).toFixed(1)}%`,
     accent: 'text-blue-600 dark:text-blue-400',
   },
   {
     label: 'Chat Conv Rate',
     key: 'chat_conversion_rate',
-    format: (v) => `${v.toFixed(1)}%`,
+    format: (v) => `${(v * 100).toFixed(1)}%`,
     accent: 'text-violet-600 dark:text-violet-400',
   },
   {
@@ -88,7 +88,7 @@ const KPIS: KPIDef[] = [
   {
     label: 'Returning %',
     key: 'returning_visitor_pct',
-    format: (v) => `${v.toFixed(1)}%`,
+    format: (v) => `${(v * 100).toFixed(1)}%`,
     accent: 'text-orange-600 dark:text-orange-400',
   },
 ];

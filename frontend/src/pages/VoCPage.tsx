@@ -133,57 +133,35 @@ export default function VoCPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="pl-6">Objection Type</TableHead>
-                      <TableHead className="text-right">Count</TableHead>
-                      <TableHead className="text-right">Resolved %</TableHead>
-                      <TableHead className="pl-4">Severity Breakdown</TableHead>
-                      <TableHead className="pr-6">Sample Quotes</TableHead>
+                      <TableHead className="pl-6">Objection</TableHead>
+                      <TableHead className="text-right">Mentions</TableHead>
+                      <TableHead>Severity</TableHead>
+                      <TableHead className="text-right">Resolved</TableHead>
+                      <TableHead className="text-right pr-6">Converted</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {objections.map((obj, idx) => (
                       <TableRow key={idx}>
-                        <TableCell className="pl-6 font-medium text-foreground">
-                          {obj.type}
+                        <TableCell className="pl-6 font-medium text-foreground max-w-sm">
+                          {obj.objection}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {obj.count.toLocaleString()}
+                          {obj.mention_count}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell>
                           <Badge
-                            variant={obj.resolved_pct >= 50 ? 'default' : 'outline'}
-                            className="text-xs tabular-nums"
+                            variant={obj.severity === 'high' ? 'destructive' : 'secondary'}
+                            className="text-xs"
                           >
-                            {obj.resolved_pct.toFixed(1)}%
+                            {obj.severity}
                           </Badge>
                         </TableCell>
-                        <TableCell className="pl-4">
-                          <div className="flex flex-wrap gap-1.5">
-                            {Object.entries(obj.severity_breakdown).map(([level, count]) => (
-                              <Badge
-                                key={level}
-                                variant="secondary"
-                                className={cn(
-                                  'text-[10px]',
-                                  level.toLowerCase() === 'high' &&
-                                    'bg-destructive/10 text-destructive border-destructive/20',
-                                  level.toLowerCase() === 'medium' &&
-                                    'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
-                                )}
-                              >
-                                {level}: {count}
-                              </Badge>
-                            ))}
-                          </div>
+                        <TableCell className="text-right tabular-nums">
+                          {obj.resolved_count}
                         </TableCell>
-                        <TableCell className="pr-6 max-w-xs">
-                          {obj.verbatim_quotes.length > 0 ? (
-                            <p className="text-xs text-muted-foreground truncate italic">
-                              "{obj.verbatim_quotes[0]}"
-                            </p>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">--</span>
-                          )}
+                        <TableCell className="text-right pr-6 tabular-nums">
+                          {obj.converted_count}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -222,7 +200,7 @@ export default function VoCPage() {
                     {infoGaps.map((gap, idx) => (
                       <TableRow key={idx}>
                         <TableCell className="pl-6 font-medium text-foreground max-w-sm">
-                          {gap.question}
+                          {gap.customer_question}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {gap.frequency.toLocaleString()}
@@ -230,22 +208,22 @@ export default function VoCPage() {
                         <TableCell>
                           <Badge
                             variant={
-                              gap.agent_quality.toLowerCase() === 'good'
+                              gap.agent_response_quality === 'good'
                                 ? 'default'
-                                : gap.agent_quality.toLowerCase() === 'partial'
+                                : gap.agent_response_quality === 'partial'
                                 ? 'secondary'
                                 : 'destructive'
                             }
                             className="text-xs"
                           >
-                            {gap.agent_quality}
+                            {gap.agent_response_quality}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">
-                          {gap.shopper_reaction}
+                          {gap.most_common_reaction}
                         </TableCell>
                         <TableCell className="pr-6 text-muted-foreground text-sm">
-                          {gap.product || '--'}
+                          {gap.most_common_product || '--'}
                         </TableCell>
                       </TableRow>
                     ))}

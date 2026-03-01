@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   PieChart,
   Pie,
@@ -8,7 +8,7 @@ import {
   Legend,
 } from 'recharts';
 import { useBrand } from '@/App';
-import { fetchObjections, Objection } from '@/api/client';
+import { fetchCompetitors, Competitor } from '@/api/client';
 import {
   Card,
   CardHeader,
@@ -18,8 +18,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-
-/* ── Pie colors ───────────────────────────────────────────────── */
 
 const PIE_COLORS = [
   '#6366f1',
@@ -32,83 +30,59 @@ const PIE_COLORS = [
   '#f97316',
 ];
 
-/* ── Competitors Page ─────────────────────────────────────────── */
-
 export default function CompetitorsPage() {
   const { selectedBrandId } = useBrand();
-  const [objections, setObjections] = useState<Objection[]>([]);
+  const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!selectedBrandId) return;
     setLoading(true);
-    fetchObjections(selectedBrandId)
-      .then(setObjections)
+    fetchCompetitors(selectedBrandId)
+      .then(setCompetitors)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [selectedBrandId]);
 
-  /*
-   * Competitor data comes from enrichment. We treat each objection "type"
-   * as a competitor mention category for the purpose of this view.
-   * If the objections list is empty, enrichment has not been run.
-   */
-  const competitorData = useMemo(() => {
-    if (objections.length === 0) return [];
-    return objections.map((obj) => ({
-      name: obj.type,
-      count: obj.count,
-      resolved_pct: obj.resolved_pct,
-      quotes: obj.verbatim_quotes,
-      severity: obj.severity_breakdown,
-    }));
-  }, [objections]);
+  const totalMentions = competitors.reduce((s, c) => s + c.mention_count, 0);
 
-  const totalMentions = competitorData.reduce((s, c) => s + c.count, 0);
-
-  const pieData = competitorData.map((c) => ({
-    name: c.name,
-    value: c.count,
+  const pieData = competitors.map((c) => ({
+    name: c.competitor_name,
+    value: c.mention_count,
   }));
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div>
         <h2 className="text-xl font-bold text-foreground tracking-tight">
           Competitor Intelligence
         </h2>
         <p className="text-sm text-muted-foreground mt-0.5">
-          How competitors are being mentioned and compared in customer conversations
+          Which competitors customers mention in conversations and why
         </p>
       </div>
 
-      {/* Loading state */}
       {loading ? (
         <Card className="animate-pulse">
           <CardContent className="p-6">
             <div className="h-64 bg-muted rounded" />
           </CardContent>
         </Card>
-      ) : competitorData.length === 0 ? (
-        /* ── Empty state ──────────────────────────────────────── */
+      ) : competitors.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-20 gap-4">
             <h3 className="text-lg font-semibold text-foreground">
               No Competitor Data Yet
             </h3>
             <p className="text-sm text-muted-foreground text-center max-w-md">
-              Competitor intelligence is derived from LLM-enriched session data.
-              Once enrichment is run, competitor mentions will appear here.
+              Competitor intelligence is extracted from chat conversations via LLM enrichment.
             </p>
-            <Badge variant="secondary">
-              Run LLM enrichment to see competitor intelligence
-            </Badge>
+            <Badge variant="secondary">Run LLM enrichment to populate</Badge>
           </CardContent>
         </Card>
       ) : (
         <>
-          {/* ── Summary KPI ─────────────────────────────────────── */}
+          {/* Summary KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
@@ -125,30 +99,24 @@ export default function CompetitorsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs font-medium uppercase tracking-wider">
-                  Categories
+                  Competitors Found
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold text-foreground">
-                  {competitorData.length}
+                  {competitors.length}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs font-medium uppercase tracking-wider">
-                  Avg Resolution
+                  Top Competitor
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-foreground">
-                  {competitorData.length > 0
-                    ? (
-                        competitorData.reduce((s, c) => s + c.resolved_pct, 0) /
-                        competitorData.length
-                      ).toFixed(1)
-                    : '0.0'}
-                  %
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  {competitors[0]?.competitor_name || '--'}
                 </p>
               </CardContent>
             </Card>
@@ -156,7 +124,7 @@ export default function CompetitorsPage() {
 
           <Separator />
 
-          {/* ── PieChart for mention share ──────────────────────── */}
+          {/* Pie Chart */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
@@ -181,10 +149,7 @@ export default function CompetitorsPage() {
                     labelLine={{ stroke: 'hsl(var(--muted-foreground))' }}
                   >
                     {pieData.map((_entry, idx) => (
-                      <Cell
-                        key={idx}
-                        fill={PIE_COLORS[idx % PIE_COLORS.length]}
-                      />
+                      <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                     ))}
                   </Pie>
                   <RechartsTooltip
@@ -203,47 +168,40 @@ export default function CompetitorsPage() {
             </CardContent>
           </Card>
 
-          {/* ── Detail cards per competitor ─────────────────────── */}
+          {/* Detail cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {competitorData.map((comp, idx) => (
+            {competitors.map((comp, idx) => (
               <Card key={idx}>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base font-semibold text-foreground">
-                      {comp.name}
+                      {comp.competitor_name}
                     </CardTitle>
                     <Badge variant="secondary" className="text-xs tabular-nums">
-                      {comp.count.toLocaleString()} mentions
+                      {comp.mention_count} mentions
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {/* Severity badges */}
+                  {/* Sentiment */}
                   <div className="flex flex-wrap gap-1.5">
-                    {Object.entries(comp.severity).map(([level, count]) => (
-                      <Badge key={level} variant="outline" className="text-[10px]">
-                        {level}: {count}
+                    {comp.sentiments?.split(', ').map((s) => (
+                      <Badge
+                        key={s}
+                        variant={s === 'negative' ? 'destructive' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {s}
                       </Badge>
                     ))}
                   </div>
 
-                  {/* Resolved */}
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Resolved</span>
-                    <Badge
-                      variant={comp.resolved_pct >= 50 ? 'default' : 'destructive'}
-                      className="text-xs tabular-nums"
-                    >
-                      {comp.resolved_pct.toFixed(1)}%
-                    </Badge>
-                  </div>
-
-                  {/* Sample quote */}
-                  {comp.quotes.length > 0 && (
+                  {/* Context */}
+                  {comp.contexts && (
                     <>
                       <Separator />
-                      <p className="text-xs text-muted-foreground italic leading-relaxed">
-                        "{comp.quotes[0]}"
+                      <p className="text-xs text-muted-foreground italic leading-relaxed line-clamp-3">
+                        {comp.contexts.split(' | ')[0]}
                       </p>
                     </>
                   )}

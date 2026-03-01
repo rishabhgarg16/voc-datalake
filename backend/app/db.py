@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
+import ssl
+import logging
 
 import asyncpg
 
 from app.config import settings
 
+logger = logging.getLogger(__name__)
 pool: asyncpg.Pool | None = None
 
 
@@ -11,7 +14,20 @@ async def get_pool() -> asyncpg.Pool:
     global pool
     if pool is None:
         dsn = settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
-        pool = await asyncpg.create_pool(dsn, min_size=2, max_size=10)
+        kwargs: dict = {"dsn": dsn, "min_size": 2, "max_size": 10}
+        # Supabase and most cloud DBs require SSL
+        if settings.is_production or "supabase" in dsn:
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            kwargs["ssl"] = ctx
+        logger.info(f"Connecting to database at {dsn[:40]}...")
+        try:
+            pool = await asyncpg.create_pool(**kwargs)
+            logger.info("Database pool created successfully")
+        except Exception as e:
+            logger.error(f"Failed to connect to database: {e}")
+            raise
     return pool
 
 

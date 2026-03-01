@@ -154,3 +154,26 @@ async def info_gaps(
 
     rows = await fetch_all(query, *args)
     return {"brand_id": brand_id, "information_gaps": rows}
+
+
+@router.get("/brands/{brand_id}/voc/competitors")
+async def competitors(brand_id: int):
+    brand = await fetch_one("SELECT id FROM brands WHERE id = $1", brand_id)
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand not found")
+
+    rows = await fetch_all(
+        """
+        SELECT
+            competitor_name,
+            COUNT(*) AS mention_count,
+            string_agg(DISTINCT sentiment_vs_brand, ', ') AS sentiments,
+            string_agg(DISTINCT mention_context, ' | ') AS contexts
+        FROM competitor_mentions
+        WHERE brand_id = $1
+        GROUP BY competitor_name
+        ORDER BY mention_count DESC
+        """,
+        brand_id,
+    )
+    return {"brand_id": brand_id, "competitors": rows}
