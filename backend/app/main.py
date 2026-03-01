@@ -10,7 +10,8 @@ from app.api import brands, overview, funnel, attribution, voc, segments, produc
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await get_pool()
+    # Don't connect to DB on startup — connect lazily on first request
+    # This prevents the app from crashing if DB is temporarily unavailable
     yield
     await close_pool()
 
