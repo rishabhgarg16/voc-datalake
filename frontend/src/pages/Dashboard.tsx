@@ -47,59 +47,47 @@ const KPIS: KPIDef[] = [
   {
     label: 'Sessions',
     key: 'total_sessions',
-    format: (v) => v.toLocaleString(),
-    accent: 'text-indigo-600 dark:text-indigo-400',
+    format: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toLocaleString(),
+    accent: 'text-blue-500',
   },
   {
-    label: 'Chats',
+    label: 'Chat Interactions',
     key: 'total_chats',
-    format: (v) => v.toLocaleString(),
-    accent: 'text-amber-600 dark:text-amber-400',
+    format: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toLocaleString(),
+    accent: 'text-violet-500',
   },
   {
     label: 'Orders',
     key: 'total_orders',
-    format: (v) => v.toLocaleString(),
-    accent: 'text-emerald-600 dark:text-emerald-400',
+    format: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : v.toLocaleString(),
+    accent: 'text-emerald-500',
   },
   {
-    label: 'Conv Rate',
+    label: 'Conv. Rate',
     key: 'conversion_rate',
-    format: (v) => `${(v * 100).toFixed(1)}%`,
-    accent: 'text-blue-600 dark:text-blue-400',
+    format: (v) => `${(v * 100).toFixed(2)}%`,
+    accent: 'text-blue-400',
   },
   {
-    label: 'Chat Conv Rate',
+    label: 'Avg. Order Value',
+    key: 'avg_order_value',
+    format: (v) => `₹${v.toFixed(0)}`,
+    accent: 'text-emerald-400',
+  },
+  {
+    label: 'Chat Conv. Rate',
     key: 'chat_conversion_rate',
     format: (v) => `${(v * 100).toFixed(1)}%`,
-    accent: 'text-violet-600 dark:text-violet-400',
-  },
-  {
-    label: 'AOV',
-    key: 'avg_order_value',
-    format: (v) => `₹${v.toLocaleString()}`,
-    accent: 'text-rose-600 dark:text-rose-400',
-  },
-  {
-    label: 'Avg Engagement',
-    key: 'avg_engagement_score',
-    format: (v) => v.toFixed(1),
-    accent: 'text-teal-600 dark:text-teal-400',
-  },
-  {
-    label: 'Returning %',
-    key: 'returning_visitor_pct',
-    format: (v) => `${(v * 100).toFixed(1)}%`,
-    accent: 'text-orange-600 dark:text-orange-400',
+    accent: 'text-violet-400',
   },
 ];
 
 const FUNNEL_COLORS = [
-  'hsl(240, 60%, 55%)',
-  'hsl(240, 55%, 65%)',
-  'hsl(240, 50%, 72%)',
-  'hsl(240, 45%, 78%)',
-  'hsl(240, 40%, 84%)',
+  '#3b82f6',
+  '#6366f1',
+  '#8b5cf6',
+  '#a78bfa',
+  '#10b981',
 ];
 
 /* ── Dashboard ────────────────────────────────────────────────── */
@@ -181,7 +169,7 @@ export default function Dashboard() {
 
       {/* ── 8 KPI Cards ─────────────────────────────────────────── */}
       {loading || !overview ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader className="pb-2">
@@ -194,7 +182,7 @@ export default function Dashboard() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {KPIS.map((kpi, index) => (
             <Card
               key={kpi.key}
@@ -263,7 +251,7 @@ export default function Dashboard() {
                 <Line
                   type="monotone"
                   dataKey="sessions"
-                  stroke="#6366f1"
+                  stroke="#3b82f6"
                   strokeWidth={2}
                   dot={false}
                   name="Sessions"

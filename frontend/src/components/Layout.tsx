@@ -66,14 +66,14 @@ export default function Layout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'flex-shrink-0 flex flex-col border-r border-border bg-slate-950 text-slate-300 transition-all duration-300',
+          'flex-shrink-0 flex flex-col border-r border-zinc-800/50 bg-zinc-950 text-zinc-400 transition-all duration-200',
           collapsed ? 'w-16' : 'w-60'
         )}
       >
         {/* Logo */}
-        <div className="h-14 flex items-center px-4 border-b border-slate-800/60">
+        <div className="h-14 flex items-center px-4 border-b border-zinc-800/40">
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
+            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
               <BarChart3 className="h-4 w-4 text-white" />
             </div>
             {!collapsed && (
@@ -98,8 +98,8 @@ export default function Layout() {
                     cn(
                       'group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                       isActive
-                        ? 'bg-indigo-600/90 text-white shadow-sm'
-                        : 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                        ? 'bg-blue-600/90 text-white shadow-sm'
+                        : 'text-zinc-400 hover:bg-zinc-800/70 hover:text-white'
                     )
                   }
                 >
@@ -125,12 +125,12 @@ export default function Layout() {
         </ScrollArea>
 
         {/* Collapse toggle + footer */}
-        <div className="border-t border-slate-800/60 px-2 py-2">
+        <div className="border-t border-zinc-800/40 px-2 py-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setCollapsed((c) => !c)}
-            className="w-full justify-start gap-2 text-slate-400 hover:text-white hover:bg-slate-800/70"
+            className="w-full justify-start gap-2 text-zinc-500 hover:text-white hover:bg-zinc-800/70"
           >
             {collapsed ? (
               <PanelLeft className="h-4 w-4" />
@@ -142,7 +142,7 @@ export default function Layout() {
             )}
           </Button>
           {!collapsed && (
-            <p className="px-3 pt-2 text-[10px] text-slate-600 select-none">
+            <p className="px-3 pt-2 text-[10px] text-zinc-600 select-none">
               Customer Datalake v1.0
             </p>
           )}
