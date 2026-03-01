@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     await close_pool()
 
 
-app = FastAPI(title="VoC Datalake API", version="1.0.3", lifespan=lifespan)
+app = FastAPI(title="VoC Datalake API", version="1.0.4", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
