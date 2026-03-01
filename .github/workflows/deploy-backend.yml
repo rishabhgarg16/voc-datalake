@@ -1,36 +1,32 @@
-name: Deploy Backend to Fly.io
+name: Deploy Backend to Railway
 
 on:
   push:
     branches: [main]
     paths:
       - "backend/**"
-      - "fly.toml"
 
-# Cancel in-progress runs for the same branch
 concurrency:
   group: deploy-backend-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   deploy:
-    name: Deploy to Fly.io
+    name: Deploy to Railway
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
 
-      - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only --config fly.toml
+      - name: Deploy to Railway
+        run: railway up --service backend ./backend --detach
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
-      - name: Verify Deployment Health
+      - name: Verify Deployment
         run: |
-          sleep 10
-          flyctl status --config fly.toml
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          sleep 30
+          curl -sf https://backend-production-ee55b.up.railway.app/api/health
+        timeout-minutes: 2
