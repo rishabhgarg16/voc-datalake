@@ -152,7 +152,7 @@ export default function Layout() {
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-14 flex-shrink-0 border-b border-border bg-card flex items-center justify-between px-6">
+        <header className="h-14 flex-shrink-0 border-b border-border bg-card text-card-foreground flex items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-semibold text-foreground">
               {pageTitle(location.pathname)}
@@ -173,7 +173,7 @@ export default function Layout() {
             <BrandSelector />
             {/* Date range selector */}
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-[150px] h-8 text-xs">
+              <SelectTrigger className="w-[150px] h-8 text-xs text-foreground">
                 <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
@@ -188,7 +188,7 @@ export default function Layout() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs gap-1.5"
+                  className="h-8 text-xs gap-1.5 text-foreground"
                   onClick={() => {
                     window.print();
                   }}

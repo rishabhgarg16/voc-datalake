@@ -26,7 +26,7 @@ export default function BrandSelector() {
         value={selectedBrandId?.toString() ?? ''}
         onValueChange={(val) => setSelectedBrandId(Number(val))}
       >
-        <SelectTrigger className="w-[200px] h-9 text-sm">
+        <SelectTrigger className="w-[200px] h-9 text-sm text-foreground">
           <SelectValue placeholder="Select brand" />
         </SelectTrigger>
         <SelectContent>
