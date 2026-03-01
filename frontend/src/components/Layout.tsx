@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { downloadCSV } from '@/lib/export';
+import { useBrand } from '@/App';
 import { useTheme } from '@/App';
 import BrandSelector from './BrandSelector';
+import api from '@/api/client';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -58,8 +61,44 @@ function pageTitle(pathname: string): string {
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [dateRange, setDateRange] = useState('30');
+  const [exporting, setExporting] = useState(false);
   const { dark, toggle } = useTheme();
+  const { selectedBrandId } = useBrand();
   const location = useLocation();
+
+  const handleExport = async () => {
+    if (!selectedBrandId || exporting) return;
+    setExporting(true);
+    const path = location.pathname;
+    try {
+      const endpointMap: Record<string, { url: string; filename: string; key: string }> = {
+        '/': { url: `/api/brands/${selectedBrandId}/overview`, filename: 'overview', key: 'kpis' },
+        '/voc': { url: `/api/brands/${selectedBrandId}/voc/intents`, filename: 'intents', key: 'intents' },
+        '/channels': { url: `/api/brands/${selectedBrandId}/channel-voc`, filename: 'channels', key: 'channels' },
+        '/competitors': { url: `/api/brands/${selectedBrandId}/voc/competitors`, filename: 'competitors', key: 'competitors' },
+        '/products': { url: `/api/brands/${selectedBrandId}/products`, filename: 'products', key: 'products' },
+        '/personas': { url: `/api/brands/${selectedBrandId}/voc/personas`, filename: 'personas', key: 'personas' },
+        '/interventions': { url: `/api/brands/${selectedBrandId}/interventions`, filename: 'interventions', key: 'interventions' },
+        '/sessions': { url: `/api/brands/${selectedBrandId}/sessions?page_size=500`, filename: 'sessions', key: 'sessions' },
+      };
+      const config = endpointMap[path];
+      if (!config) {
+        alert('Export not available for this page');
+        return;
+      }
+      const res = await api.get(config.url);
+      const data = res.data[config.key];
+      if (Array.isArray(data)) {
+        downloadCSV(data, config.filename);
+      } else if (data && typeof data === 'object') {
+        downloadCSV([data], config.filename);
+      }
+    } catch {
+      alert('Failed to export data');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -189,15 +228,14 @@ export default function Layout() {
                   variant="outline"
                   size="sm"
                   className="h-8 text-xs gap-1.5 text-foreground"
-                  onClick={() => {
-                    window.print();
-                  }}
+                  disabled={exporting}
+                  onClick={handleExport}
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  Export
+                  <Download className={cn("h-3.5 w-3.5", exporting && "animate-spin")} />
+                  {exporting ? 'Exporting...' : 'Export CSV'}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Export current page as PDF</TooltipContent>
+              <TooltipContent>Export current page data as CSV</TooltipContent>
             </Tooltip>
             <Separator orientation="vertical" className="h-6" />
             <Tooltip>
