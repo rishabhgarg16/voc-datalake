@@ -92,3 +92,42 @@
 html {
   transition: color-scheme 0.3s;
 }
+
+/* ── Geist font family ────────────────────────────────────────── */
+body {
+  font-family: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.font-mono {
+  font-family: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace !important;
+}
+
+/* ── Page enter animation ─────────────────────────────────────── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: pageEnter 250ms ease-out;
+}
+
+/* ── Pulse dot for live indicator ─────────────────────────────── */
+@keyframes pulseDot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.animate-pulse-dot {
+  animation: pulseDot 1.5s ease-in-out infinite;
+}

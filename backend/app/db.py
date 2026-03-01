@@ -28,6 +28,9 @@ async def get_pool() -> asyncpg.Pool:
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
             kwargs["ssl"] = ctx
+        # Supabase pooler (port 6543) requires no prepared statements
+        if "pooler.supabase" in dsn or ":6543" in dsn:
+            kwargs["statement_cache_size"] = 0
         logger.info(f"Connecting to database at {dsn[:40]}...")
         try:
             pool = await asyncpg.create_pool(**kwargs)

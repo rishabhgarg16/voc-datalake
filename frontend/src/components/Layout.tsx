@@ -6,6 +6,13 @@ import BrandSelector from './BrandSelector';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
@@ -25,6 +32,7 @@ import {
   PanelLeft,
   Moon,
   Sun,
+  CalendarDays,
 } from 'lucide-react';
 
 const navItems = [
@@ -48,6 +56,7 @@ function pageTitle(pathname: string): string {
 
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [dateRange, setDateRange] = useState('30');
   const { dark, toggle } = useTheme();
   const location = useLocation();
 
@@ -143,11 +152,36 @@ export default function Layout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
         <header className="h-14 flex-shrink-0 border-b border-border bg-card flex items-center justify-between px-6">
-          <h1 className="text-sm font-semibold text-foreground">
-            {pageTitle(location.pathname)}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-sm font-semibold text-foreground">
+              {pageTitle(location.pathname)}
+            </h1>
+            <Separator orientation="vertical" className="h-5" />
+            {/* Live data indicator */}
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-pulse-dot absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                Live data
+              </span>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <BrandSelector />
+            {/* Date range selector */}
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-[150px] h-8 text-xs">
+                <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+              </SelectContent>
+            </Select>
             <Separator orientation="vertical" className="h-6" />
             <Tooltip>
               <TooltipTrigger asChild>
@@ -169,7 +203,7 @@ export default function Layout() {
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-[1400px] mx-auto">
+          <div className="p-6 max-w-[1400px] mx-auto animate-page-enter">
             <Outlet />
           </div>
         </main>
