@@ -131,10 +131,10 @@ export default function AskCustomers() {
                   'max-w-[75%] rounded-xl px-4 py-3',
                   msg.type === 'user'
                     ? 'bg-indigo-600 text-white rounded-tr-sm'
-                    : 'bg-card text-card-foreground border border-border rounded-tl-sm shadow-sm'
+                    : 'bg-muted text-foreground rounded-tl-sm shadow-sm'
                 )}
               >
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
                   {msg.content}
                 </p>
 
