@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import time
 from collections import defaultdict
 
@@ -12,6 +13,7 @@ from app.config import settings
 from app.db import fetch_all, fetch_one
 
 router = APIRouter(tags=["ask"])
+logger = logging.getLogger(__name__)
 
 # Simple in-memory rate limiting: max 10 requests/minute per brand
 _rate_limit: dict[int, list[float]] = defaultdict(list)
@@ -56,36 +58,8 @@ async def ask_customers(brand_id: int, body: AskRequest):
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     # Search enriched conversations for relevant data
-    relevant = await fetch_all(
-        """
-        SELECT
-            ec.session_id,
-            ec.outcome,
-            ec.primary_intent,
-            ec.purchase_readiness,
-            ec.price_sensitivity,
-            ec.sentiment_score,
-            ec.emotional_state,
-            ec.persona_tags,
-            ec.purchase_blockers,
-            ec.demand_signals
-        FROM enriched_conversations ec
-        WHERE ec.brand_id = $1
-          AND (
-              ec.primary_intent ILIKE '%' || $2 || '%'
-              OR array_to_string(ec.purchase_blockers, ',') ILIKE '%' || $2 || '%'
-              OR array_to_string(ec.persona_tags, ',') ILIKE '%' || $2 || '%'
-              OR ec.demand_signals::text ILIKE '%' || $2 || '%'
-          )
-        LIMIT 30
-        """,
-        brand_id,
-        question,
-    )
-
-    # Fall back to broader sample if too few results
-    if len(relevant) < 5:
-        fallback = await fetch_all(
+    try:
+        relevant = await fetch_all(
             """
             SELECT
                 ec.session_id,
@@ -100,18 +74,50 @@ async def ask_customers(brand_id: int, body: AskRequest):
                 ec.demand_signals
             FROM enriched_conversations ec
             WHERE ec.brand_id = $1
-            ORDER BY ec.enriched_at DESC NULLS LAST, ec.id DESC
+              AND (
+                  ec.primary_intent ILIKE '%' || $2 || '%'
+                  OR array_to_string(ec.purchase_blockers, ',') ILIKE '%' || $2 || '%'
+                  OR array_to_string(ec.persona_tags, ',') ILIKE '%' || $2 || '%'
+                  OR ec.demand_signals::text ILIKE '%' || $2 || '%'
+              )
             LIMIT 30
             """,
             brand_id,
+            question,
         )
-        seen = {r["session_id"] for r in relevant}
-        for row in fallback:
-            if row["session_id"] not in seen:
-                relevant.append(row)
-                seen.add(row["session_id"])
-            if len(relevant) >= 30:
-                break
+
+        # Fall back to broader sample if too few results
+        if len(relevant) < 5:
+            fallback = await fetch_all(
+                """
+                SELECT
+                    ec.session_id,
+                    ec.outcome,
+                    ec.primary_intent,
+                    ec.purchase_readiness,
+                    ec.price_sensitivity,
+                    ec.sentiment_score,
+                    ec.emotional_state,
+                    ec.persona_tags,
+                    ec.purchase_blockers,
+                    ec.demand_signals
+                FROM enriched_conversations ec
+                WHERE ec.brand_id = $1
+                ORDER BY ec.enriched_at DESC NULLS LAST, ec.id DESC
+                LIMIT 30
+                """,
+                brand_id,
+            )
+            seen = {r["session_id"] for r in relevant}
+            for row in fallback:
+                if row["session_id"] not in seen:
+                    relevant.append(row)
+                    seen.add(row["session_id"])
+                if len(relevant) >= 30:
+                    break
+    except Exception as e:
+        logger.exception("Failed to fetch enriched conversation data")
+        raise HTTPException(status_code=500, detail="Database query failed")
 
     if not relevant:
         return {
@@ -122,38 +128,42 @@ async def ask_customers(brand_id: int, body: AskRequest):
         }
 
     # Also pull aggregate stats
-    overview = await fetch_one(
-        "SELECT * FROM mv_brand_overview WHERE brand_id = $1", brand_id
-    )
+    try:
+        overview = await fetch_one(
+            "SELECT * FROM mv_brand_overview WHERE brand_id = $1", brand_id
+        )
 
-    # Also pull top blockers and competitors
-    blockers = await fetch_all(
-        """
-        SELECT blocker, COUNT(*) as cnt
-        FROM enriched_conversations ec, UNNEST(ec.purchase_blockers) AS blocker
-        WHERE ec.brand_id = $1
-        GROUP BY blocker ORDER BY cnt DESC LIMIT 10
-        """,
-        brand_id,
-    )
+        # Also pull top blockers and competitors
+        blockers = await fetch_all(
+            """
+            SELECT blocker, COUNT(*) as cnt
+            FROM enriched_conversations ec, UNNEST(ec.purchase_blockers) AS blocker
+            WHERE ec.brand_id = $1
+            GROUP BY blocker ORDER BY cnt DESC LIMIT 10
+            """,
+            brand_id,
+        )
 
-    competitors = await fetch_all(
-        """
-        SELECT competitor_name, COUNT(*) as cnt
-        FROM competitor_mentions WHERE brand_id = $1
-        GROUP BY competitor_name ORDER BY cnt DESC LIMIT 5
-        """,
-        brand_id,
-    )
+        competitors = await fetch_all(
+            """
+            SELECT competitor_name, COUNT(*) as cnt
+            FROM competitor_mentions WHERE brand_id = $1
+            GROUP BY competitor_name ORDER BY cnt DESC LIMIT 5
+            """,
+            brand_id,
+        )
 
-    info_gaps = await fetch_all(
-        """
-        SELECT customer_question, COUNT(*) as cnt
-        FROM information_gaps WHERE brand_id = $1
-        GROUP BY customer_question ORDER BY cnt DESC LIMIT 5
-        """,
-        brand_id,
-    )
+        info_gaps = await fetch_all(
+            """
+            SELECT customer_question, COUNT(*) as cnt
+            FROM information_gaps WHERE brand_id = $1
+            GROUP BY customer_question ORDER BY cnt DESC LIMIT 5
+            """,
+            brand_id,
+        )
+    except Exception as e:
+        logger.exception("Failed to fetch aggregate data for ask endpoint")
+        raise HTTPException(status_code=500, detail="Database query failed")
 
     # Build context for LLM
     conversations_text = []
