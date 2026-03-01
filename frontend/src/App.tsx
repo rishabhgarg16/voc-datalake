@@ -1,3 +1,4 @@
+// VoC Intelligence Platform v1.0.2
 import { useState, useEffect, createContext, useContext } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { TooltipProvider } from '@/components/ui/tooltip';
