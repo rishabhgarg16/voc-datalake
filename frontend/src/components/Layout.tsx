@@ -1,63 +1,177 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { useTheme } from '@/App';
 import BrandSelector from './BrandSelector';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  BarChart3,
+  UserX,
+  Radio,
+  Swords,
+  Package,
+  Users,
+  Bell,
+  List,
+  MessageCircle,
+  PanelLeftClose,
+  PanelLeft,
+  Moon,
+  Sun,
+} from 'lucide-react';
 
 const navItems = [
-  { to: '/', label: 'Overview', icon: '📊' },
-  { to: '/voc', label: 'Non-Buyer Insights', icon: '👤' },
-  { to: '/channels', label: 'Channel VoC', icon: '📢' },
-  { to: '/competitors', label: 'Competitors', icon: '⚔️' },
-  { to: '/products', label: 'Products', icon: '📦' },
-  { to: '/personas', label: 'Personas', icon: '👥' },
-  { to: '/interventions', label: 'Interventions', icon: '🔔' },
-  { to: '/sessions/explorer', label: 'Sessions', icon: '📋' },
-  { to: '/ask', label: 'Ask Customers', icon: '💬' },
+  { to: '/', label: 'Overview', icon: BarChart3 },
+  { to: '/voc', label: 'Non-Buyer Insights', icon: UserX },
+  { to: '/channels', label: 'Channels', icon: Radio },
+  { to: '/competitors', label: 'Competitors', icon: Swords },
+  { to: '/products', label: 'Products', icon: Package },
+  { to: '/personas', label: 'Personas', icon: Users },
+  { to: '/interventions', label: 'Interventions', icon: Bell },
+  { to: '/sessions', label: 'Sessions', icon: List },
+  { to: '/ask', label: 'Ask Customers', icon: MessageCircle },
 ];
 
+function pageTitle(pathname: string): string {
+  const match = navItems.find((item) =>
+    item.to === '/' ? pathname === '/' : pathname.startsWith(item.to)
+  );
+  return match?.label ?? 'Dashboard';
+}
+
 export default function Layout() {
+  const [collapsed, setCollapsed] = useState(false);
+  const { dark, toggle } = useTheme();
+  const location = useLocation();
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 bg-gray-900 text-gray-300 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-800">
-          <span className="text-xl font-bold text-white tracking-tight">
-            VoC Intelligence
-          </span>
+      <aside
+        className={cn(
+          'flex-shrink-0 flex flex-col border-r border-border bg-slate-950 text-slate-300 transition-all duration-300',
+          collapsed ? 'w-16' : 'w-60'
+        )}
+      >
+        {/* Logo */}
+        <div className="h-14 flex items-center px-4 border-b border-slate-800/60">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
+              <BarChart3 className="h-4 w-4 text-white" />
+            </div>
+            {!collapsed && (
+              <span className="text-sm font-semibold text-white truncate tracking-tight">
+                VoC Intelligence
+              </span>
+            )}
+          </div>
         </div>
-        <nav className="flex-1 overflow-y-auto py-4 space-y-1 px-3">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-brand-600 text-white'
-                    : 'hover:bg-gray-800 hover:text-white'
-                }`
+
+        {/* Nav */}
+        <ScrollArea className="flex-1 py-3">
+          <nav className="space-y-0.5 px-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const link = (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === '/'}
+                  className={({ isActive }) =>
+                    cn(
+                      'group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-indigo-600/90 text-white shadow-sm'
+                        : 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                    )
+                  }
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </NavLink>
+              );
+
+              if (collapsed) {
+                return (
+                  <Tooltip key={item.to}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right" className="font-medium">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                );
               }
-            >
-              <span className="text-lg leading-none">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="px-4 py-3 border-t border-gray-800 text-xs text-gray-500">
-          Customer Datalake v1.0
+
+              return link;
+            })}
+          </nav>
+        </ScrollArea>
+
+        {/* Collapse toggle + footer */}
+        <div className="border-t border-slate-800/60 px-2 py-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed((c) => !c)}
+            className="w-full justify-start gap-2 text-slate-400 hover:text-white hover:bg-slate-800/70"
+          >
+            {collapsed ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <>
+                <PanelLeftClose className="h-4 w-4" />
+                <span className="text-xs">Collapse</span>
+              </>
+            )}
+          </Button>
+          {!collapsed && (
+            <p className="px-3 pt-2 text-[10px] text-slate-600 select-none">
+              Customer Datalake v1.0
+            </p>
+          )}
         </div>
       </aside>
 
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 flex-shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <h1 className="text-lg font-semibold text-gray-700">Dashboard</h1>
-          <BrandSelector />
+        <header className="h-14 flex-shrink-0 border-b border-border bg-card flex items-center justify-between px-6">
+          <h1 className="text-sm font-semibold text-foreground">
+            {pageTitle(location.pathname)}
+          </h1>
+          <div className="flex items-center gap-3">
+            <BrandSelector />
+            <Separator orientation="vertical" className="h-6" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggle}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {dark ? 'Light mode' : 'Dark mode'}
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 max-w-[1400px] mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

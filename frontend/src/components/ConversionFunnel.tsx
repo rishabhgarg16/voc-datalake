@@ -8,77 +8,93 @@ import {
   Cell,
   LabelList,
 } from 'recharts';
-import { FunnelStage } from '../api/client';
+import { FunnelStage } from '@/api/client';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface Props {
   stages: FunnelStage[];
   loading: boolean;
 }
 
-const COLORS = ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff'];
+const COLORS = ['hsl(240, 60%, 55%)', 'hsl(240, 55%, 65%)', 'hsl(240, 50%, 72%)', 'hsl(240, 45%, 78%)', 'hsl(240, 40%, 84%)'];
 
 export default function ConversionFunnel({ stages, loading }: Props) {
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 animate-pulse">
-        <div className="h-5 bg-gray-200 rounded w-40 mb-4" />
-        <div className="h-48 bg-gray-100 rounded" />
-      </div>
+      <Card className="animate-pulse">
+        <CardHeader>
+          <div className="h-5 bg-muted rounded w-40" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-48 bg-muted rounded" />
+        </CardContent>
+      </Card>
     );
   }
 
   if (stages.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-gray-400 text-center">
-        No funnel data available
-      </div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground text-sm">No funnel data available</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
-        Conversion Funnel
-      </h3>
-      <ResponsiveContainer width="100%" height={stages.length * 60 + 20}>
-        <BarChart
-          data={stages}
-          layout="vertical"
-          margin={{ top: 0, right: 40, bottom: 0, left: 10 }}
-        >
-          <XAxis type="number" hide />
-          <YAxis
-            type="category"
-            dataKey="name"
-            width={120}
-            tick={{ fontSize: 13, fill: '#6b7280' }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <Tooltip
-            formatter={(value: number) => [
-              `${value.toLocaleString()}`,
-              'Count',
-            ]}
-            contentStyle={{
-              borderRadius: '8px',
-              border: '1px solid #e5e7eb',
-              fontSize: '13px',
-            }}
-          />
-          <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={32}>
-            {stages.map((_entry, idx) => (
-              <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
-            ))}
-            <LabelList
-              dataKey="count"
-              position="right"
-              formatter={(v: number) => v.toLocaleString()}
-              style={{ fontSize: 12, fill: '#374151', fontWeight: 600 }}
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+            Conversion Funnel
+          </CardTitle>
+          <Badge variant="secondary" className="text-xs">
+            {stages.length} stages
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={stages.length * 56 + 20}>
+          <BarChart
+            data={stages}
+            layout="vertical"
+            margin={{ top: 0, right: 50, bottom: 0, left: 10 }}
+          >
+            <XAxis type="number" hide />
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={130}
+              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
             />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+            <Tooltip
+              formatter={(value: number) => [value.toLocaleString(), 'Count']}
+              contentStyle={{
+                borderRadius: '8px',
+                border: '1px solid hsl(var(--border))',
+                fontSize: '13px',
+                backgroundColor: 'hsl(var(--card))',
+                color: 'hsl(var(--card-foreground))',
+              }}
+            />
+            <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={30}>
+              {stages.map((_entry, idx) => (
+                <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+              ))}
+              <LabelList
+                dataKey="count"
+                position="right"
+                formatter={(v: number) => v.toLocaleString()}
+                style={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontWeight: 600 }}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   );
 }

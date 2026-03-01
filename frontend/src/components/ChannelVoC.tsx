@@ -7,7 +7,17 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { ChannelVoC as ChannelData } from '../api/client';
+import { ChannelVoC as ChannelData } from '@/api/client';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface Props {
   data: ChannelData[];
@@ -17,102 +27,130 @@ interface Props {
 export default function ChannelVoC({ data, loading }: Props) {
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 animate-pulse">
-        <div className="h-5 bg-gray-200 rounded w-48 mb-4" />
-        <div className="h-64 bg-gray-100 rounded" />
+      <div className="space-y-6">
+        <Card className="animate-pulse">
+          <CardHeader>
+            <div className="h-5 bg-muted rounded w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 bg-muted rounded" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-gray-400 text-center">
-        No channel data available
-      </div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground text-sm">No channel data available</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Bar chart: Orders by Channel */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
-          Orders by Channel
-        </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data} margin={{ top: 0, right: 20, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-            <XAxis
-              dataKey="utm_source"
-              tick={{ fontSize: 12, fill: '#6b7280' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 12, fill: '#6b7280' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                fontSize: '13px',
-              }}
-            />
-            <Bar dataKey="order_count" name="Orders" fill="#6366f1" radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* Revenue by Channel chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+            Revenue by Channel
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data} margin={{ top: 0, right: 20, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis
+                dataKey="utm_source"
+                tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+              />
+              <Tooltip
+                formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: '1px solid hsl(var(--border))',
+                  fontSize: '13px',
+                  backgroundColor: 'hsl(var(--card))',
+                  color: 'hsl(var(--card-foreground))',
+                }}
+              />
+              <Bar
+                dataKey="total_revenue"
+                name="Revenue"
+                fill="hsl(var(--chart-1))"
+                radius={[6, 6, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+      {/* Channel Table */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
             Channel Performance
-          </h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                <th className="px-6 py-3">Source</th>
-                <th className="px-6 py-3 text-right">Sessions</th>
-                <th className="px-6 py-3 text-right">Chats</th>
-                <th className="px-6 py-3 text-right">Orders</th>
-                <th className="px-6 py-3 text-right">Conv Rate</th>
-                <th className="px-6 py-3 text-right">Revenue</th>
-                <th className="px-6 py-3">Top Objections</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Source</TableHead>
+                <TableHead className="text-right">Sessions</TableHead>
+                <TableHead className="text-right">Chats</TableHead>
+                <TableHead className="text-right">Orders</TableHead>
+                <TableHead className="text-right">Conv Rate</TableHead>
+                <TableHead className="text-right">Revenue</TableHead>
+                <TableHead className="text-right pr-6">Engagement</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {data.map((ch) => (
-                <tr key={ch.utm_source} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3 font-medium text-gray-900">{ch.utm_source || '(direct)'}</td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                <TableRow key={ch.utm_source}>
+                  <TableCell className="pl-6 font-medium">
+                    {ch.utm_source || '(direct)'}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {ch.session_count.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {ch.chat_count.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {ch.order_count.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
-                    {ch.conversion_rate.toFixed(1)}%
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    <Badge
+                      variant={ch.conversion_rate >= 3 ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {ch.conversion_rate.toFixed(1)}%
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">
                     ₹{ch.total_revenue.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3 text-gray-500 text-xs max-w-xs truncate">
-                    {ch.top_objections?.join(', ') || '--'}
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-right pr-6 tabular-nums">
+                    {ch.avg_engagement.toFixed(1)}
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

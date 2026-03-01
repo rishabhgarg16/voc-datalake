@@ -8,7 +8,17 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
-import { Intervention } from '../api/client';
+import { Intervention } from '@/api/client';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface Props {
   interventions: Intervention[];
@@ -18,121 +28,149 @@ interface Props {
 export default function InterventionStats({ interventions, loading }: Props) {
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="h-5 bg-gray-200 rounded w-48 mb-4" />
-          <div className="h-64 bg-gray-100 rounded" />
-        </div>
+      <div className="space-y-6">
+        <Card className="animate-pulse">
+          <CardHeader>
+            <div className="h-5 bg-muted rounded w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 bg-muted rounded" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (interventions.length === 0) {
     return (
-      <div className="text-gray-400 text-center py-12">No intervention data available</div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground text-sm">No intervention data available</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Nudge pipeline visualization */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">
-          Nudge Pipeline: Triggered → Chat → Order
-        </h3>
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={interventions} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-            <XAxis
-              dataKey="trigger_type"
-              tick={{ fontSize: 11, fill: '#6b7280' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 12, fill: '#6b7280' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                fontSize: '13px',
-              }}
-            />
-            <Legend verticalAlign="top" height={36} />
-            <Bar
-              dataKey="triggered_count"
-              name="Triggered"
-              fill="#c7d2fe"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              dataKey="chat_after"
-              name="Led to Chat"
-              fill="#818cf8"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              dataKey="order_after"
-              name="Led to Order"
-              fill="#4f46e5"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* Pipeline chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
+              Nudge Pipeline
+            </CardTitle>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Badge variant="secondary" className="text-[10px] bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300 border-0">
+                Triggered
+              </Badge>
+              <span>→</span>
+              <Badge variant="secondary" className="text-[10px] bg-indigo-200 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200 border-0">
+                Chat
+              </Badge>
+              <span>→</span>
+              <Badge variant="secondary" className="text-[10px] bg-indigo-500 text-white dark:bg-indigo-600 border-0">
+                Order
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={interventions} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis
+                dataKey="trigger_type"
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: '1px solid hsl(var(--border))',
+                  fontSize: '13px',
+                  backgroundColor: 'hsl(var(--card))',
+                  color: 'hsl(var(--card-foreground))',
+                }}
+              />
+              <Legend verticalAlign="top" height={36} />
+              <Bar
+                dataKey="triggered_count"
+                name="Triggered"
+                fill="hsl(240, 50%, 82%)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="chat_after"
+                name="Led to Chat"
+                fill="hsl(240, 55%, 65%)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="order_after"
+                name="Led to Order"
+                fill="hsl(240, 60%, 50%)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-      {/* Stats table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+      {/* Performance table */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
             Per-Trigger Performance
-          </h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                <th className="px-6 py-3">Trigger Type</th>
-                <th className="px-6 py-3 text-right">Triggered</th>
-                <th className="px-6 py-3 text-right">Chat After</th>
-                <th className="px-6 py-3 text-right">Order After</th>
-                <th className="px-6 py-3 text-right">Conv Lift</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="pl-6">Trigger Type</TableHead>
+                <TableHead className="text-right">Triggered</TableHead>
+                <TableHead className="text-right">Chat After</TableHead>
+                <TableHead className="text-right">Order After</TableHead>
+                <TableHead className="text-right pr-6">Conv Lift</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {interventions.map((inv) => (
-                <tr key={inv.trigger_type} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3 font-medium text-gray-900">
+                <TableRow key={inv.trigger_type}>
+                  <TableCell className="pl-6 font-medium">
                     {inv.trigger_type}
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {inv.triggered_count.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {inv.chat_after.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3 text-right text-gray-600">
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
                     {inv.order_after.toLocaleString()}
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    <span
-                      className={`font-semibold ${
-                        inv.conversion_lift > 0 ? 'text-green-600' : 'text-red-600'
-                      }`}
+                  </TableCell>
+                  <TableCell className="text-right pr-6">
+                    <Badge
+                      variant={inv.conversion_lift > 0 ? 'default' : 'destructive'}
+                      className="text-xs tabular-nums"
                     >
                       {inv.conversion_lift > 0 ? '+' : ''}
                       {inv.conversion_lift.toFixed(1)}%
-                    </span>
-                  </td>
-                </tr>
+                    </Badge>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

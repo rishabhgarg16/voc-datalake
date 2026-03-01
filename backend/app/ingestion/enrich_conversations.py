@@ -1,7 +1,7 @@
 """
 LLM Enrichment Worker
 =====================
-Processes un-enriched chat conversations through Claude to extract
+Processes un-enriched chat conversations through OpenAI GPT-4o-mini to extract
 structured intelligence: intents, objections, competitor mentions,
 sentiment, persona tags, and more.
 
@@ -13,10 +13,9 @@ import asyncio
 import json
 import sys
 import traceback
-from datetime import datetime, timezone
 
-import anthropic
 import asyncpg
+from openai import OpenAI
 
 from app.config import settings
 
@@ -99,7 +98,7 @@ def _build_user_prompt(messages: list[dict], intents: list[dict], outcome: str) 
 
 async def enrich_one(
     pool: asyncpg.Pool,
-    client: anthropic.Anthropic,
+    client: OpenAI,
     semaphore: asyncio.Semaphore,
     conv: dict,
     progress: str,
@@ -140,18 +139,21 @@ async def enrich_one(
             )
             outcome = "purchased" if order else "did_not_purchase"
 
-            # 4. Call Claude
+            # 4. Call OpenAI
             user_prompt = _build_user_prompt(messages, intents, outcome)
 
             response = await asyncio.to_thread(
-                client.messages.create,
+                client.chat.completions.create,
                 model=settings.enrichment_model,
                 max_tokens=2048,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_prompt}],
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                response_format={"type": "json_object"},
             )
 
-            raw = response.content[0].text.strip()
+            raw = response.choices[0].message.content.strip()
 
             # Strip markdown code fences if present
             if raw.startswith("```"):
@@ -259,15 +261,15 @@ async def enrich_one(
 async def run():
     """Main entry point: find un-enriched conversations and process them."""
     print("=" * 60)
-    print("VoC Enrichment Worker")
+    print("VoC Enrichment Worker (OpenAI GPT-4o-mini)")
     print("=" * 60)
 
-    if not settings.anthropic_api_key:
-        print("ERROR: ANTHROPIC_API_KEY not set. Exiting.")
+    if not settings.openai_api_key:
+        print("ERROR: OPENAI_API_KEY not set. Exiting.")
         sys.exit(1)
 
     pool = await _get_pool()
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    client = OpenAI(api_key=settings.openai_api_key)
     semaphore = asyncio.Semaphore(settings.enrichment_concurrency)
 
     # Find conversations not yet enriched

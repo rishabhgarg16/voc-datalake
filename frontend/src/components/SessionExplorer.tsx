@@ -1,7 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchSessions, SessionListItem } from '../api/client';
-import { useBrand } from '../App';
+import { fetchSessions, SessionListItem } from '@/api/client';
+import { useBrand } from '@/App';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 export default function SessionExplorer() {
   const { selectedBrandId } = useBrand();
@@ -27,140 +40,141 @@ export default function SessionExplorer() {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-500">Filter:</span>
-          <button
-            onClick={() => setFilterChat(undefined)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              filterChat === undefined
-                ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilterChat(true)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              filterChat === true
-                ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            With Chat
-          </button>
-          <button
-            onClick={() => setFilterChat(false)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              filterChat === false
-                ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            No Chat
-          </button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Filter:</span>
+          {[
+            { label: 'All', value: undefined },
+            { label: 'With Chat', value: true },
+            { label: 'No Chat', value: false },
+          ].map((opt) => (
+            <Button
+              key={opt.label}
+              variant={filterChat === opt.value ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setFilterChat(opt.value as boolean | undefined);
+                setPage(1);
+              }}
+              className="h-7 text-xs"
+            >
+              {opt.label}
+            </Button>
+          ))}
         </div>
-        <span className="text-xs text-gray-400 ml-auto">
-          {total.toLocaleString()} total sessions
-        </span>
+        <Badge variant="secondary" className="text-xs">
+          {total.toLocaleString()} sessions
+        </Badge>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <Card>
         {loading ? (
-          <div className="p-8 flex justify-center">
-            <div className="spinner" />
-          </div>
+          <CardContent className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </CardContent>
         ) : sessions.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">No sessions found</div>
+          <CardContent className="flex items-center justify-center py-16">
+            <p className="text-muted-foreground text-sm">No sessions found</p>
+          </CardContent>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  <th className="px-6 py-3">Session ID</th>
-                  <th className="px-6 py-3">Started</th>
-                  <th className="px-6 py-3 text-right">Pages</th>
-                  <th className="px-6 py-3 text-center">Chat</th>
-                  <th className="px-6 py-3 text-center">Order</th>
-                  <th className="px-6 py-3 text-right">Engagement</th>
-                  <th className="px-6 py-3">Source</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
+          <CardContent className="px-0 py-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Session ID</TableHead>
+                  <TableHead>Started</TableHead>
+                  <TableHead className="text-right">Pages</TableHead>
+                  <TableHead className="text-center">Chat</TableHead>
+                  <TableHead className="text-center">Order</TableHead>
+                  <TableHead className="text-right">Engagement</TableHead>
+                  <TableHead className="pr-6">Source</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {sessions.map((s) => (
-                  <tr
+                  <TableRow
                     key={s.session_id}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="cursor-pointer"
                     onClick={() => navigate(`/sessions/${s.session_id}`)}
                   >
-                    <td className="px-6 py-3 font-mono text-xs text-brand-600">
+                    <TableCell className="pl-6 font-mono text-xs text-indigo-600 dark:text-indigo-400">
                       {s.session_id.substring(0, 12)}...
-                    </td>
-                    <td className="px-6 py-3 text-gray-600 text-xs">
-                      {new Date(s.started_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </td>
-                    <td className="px-6 py-3 text-right text-gray-600">{s.page_count}</td>
-                    <td className="px-6 py-3 text-center">
-                      {s.has_chat ? (
-                        <span className="inline-block w-2 h-2 rounded-full bg-green-500" />
-                      ) : (
-                        <span className="inline-block w-2 h-2 rounded-full bg-gray-300" />
-                      )}
-                    </td>
-                    <td className="px-6 py-3 text-center">
-                      {s.has_order ? (
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-                      ) : (
-                        <span className="inline-block w-2 h-2 rounded-full bg-gray-300" />
-                      )}
-                    </td>
-                    <td className="px-6 py-3 text-right">
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {s.synced_at
+                        ? new Date(s.synced_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : '--'}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {(s as Record<string, unknown>).page_count?.toString() ?? '--'}
+                    </TableCell>
+                    <TableCell className="text-center">
                       <span
-                        className={`font-semibold ${
+                        className={cn(
+                          'inline-block w-2 h-2 rounded-full',
+                          s.has_talked_to_bot ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                        )}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={cn(
+                          'inline-block w-2 h-2 rounded-full',
+                          s.has_placed_order ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                        )}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Badge
+                        variant={
                           s.engagement_score >= 7
-                            ? 'text-green-600'
+                            ? 'default'
                             : s.engagement_score >= 4
-                            ? 'text-amber-600'
-                            : 'text-gray-500'
-                        }`}
+                            ? 'secondary'
+                            : 'outline'
+                        }
+                        className="text-xs tabular-nums"
                       >
                         {s.engagement_score?.toFixed(1) ?? '--'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-3 text-gray-500 text-xs">
-                      {s.utm_source || '(direct)'}
-                    </td>
-                  </tr>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="pr-6 text-xs text-muted-foreground">
+                      {(s as Record<string, unknown>).utm_source?.toString() || '(direct)'}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+            </Table>
+          </CardContent>
         )}
-      </div>
+      </Card>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm">
-        <button
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          size="sm"
           disabled={page <= 1}
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
         >
+          <ChevronLeft className="h-4 w-4 mr-1" />
           Previous
-        </button>
-        <span className="text-gray-500">Page {page}</span>
-        <button
+        </Button>
+        <span className="text-sm text-muted-foreground">Page {page}</span>
+        <Button
+          variant="outline"
+          size="sm"
           disabled={sessions.length < 20}
           onClick={() => setPage((p) => p + 1)}
-          className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Next
-        </button>
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
       </div>
     </div>
   );

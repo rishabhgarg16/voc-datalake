@@ -1,16 +1,223 @@
-import AskCustomers from '../components/AskCustomers';
+import { useState, useEffect, useRef } from 'react';
+import { useBrand } from '@/App';
+import { askCustomers, AskResponse } from '@/api/client';
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import {
+  Send,
+  Loader2,
+  Sparkles,
+  Quote,
+  Bot,
+  User,
+} from 'lucide-react';
+
+interface Message {
+  type: 'user' | 'ai';
+  content: string;
+  sources?: Array<{ quote: string; session_id: string }>;
+}
+
+const SAMPLE_QUESTIONS = [
+  'Why are customers not buying?',
+  'What do customers say about shipping?',
+  'What are the top objections?',
+  'How do returning customers behave?',
+];
 
 export default function AskPage() {
+  const { selectedBrandId } = useBrand();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !selectedBrandId) return;
+
+    const question = input.trim();
+    setInput('');
+    setMessages((prev) => [...prev, { type: 'user', content: question }]);
+    setLoading(true);
+
+    try {
+      const res: AskResponse = await askCustomers(selectedBrandId, question);
+      setMessages((prev) => [
+        ...prev,
+        { type: 'ai', content: res.answer, sources: res.sources },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { type: 'ai', content: 'Sorry, something went wrong. Please try again.' },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Page header */}
       <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-1">Ask Your Customers</h2>
-        <p className="text-sm text-gray-400">
+        <h2 className="text-xl font-bold text-foreground tracking-tight">
+          Ask Your Customers
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Get AI-powered answers from your customer data with cited quotes
         </p>
       </div>
 
-      <AskCustomers />
+      {/* Chat interface */}
+      <div className="flex flex-col h-[calc(100vh-14rem)]">
+        {/* Messages */}
+        <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
+          <div className="space-y-4 pb-4">
+            {/* Empty state */}
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="p-4 rounded-2xl bg-muted mb-4">
+                  <Sparkles className="h-8 w-8 text-indigo-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Ask Your Customers
+                </h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Ask any question about your customers and get AI-powered answers
+                  with cited quotes from real sessions.
+                </p>
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  {SAMPLE_QUESTIONS.map((q) => (
+                    <Button
+                      key={q}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput(q)}
+                      className="h-auto py-1.5 text-xs"
+                    >
+                      {q}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Message bubbles */}
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'flex gap-3',
+                  msg.type === 'user' ? 'flex-row-reverse' : 'justify-start'
+                )}
+              >
+                {/* Avatar */}
+                <div
+                  className={cn(
+                    'h-7 w-7 rounded-full flex items-center justify-center flex-shrink-0 mt-1',
+                    msg.type === 'ai' ? 'bg-muted' : 'bg-primary'
+                  )}
+                >
+                  {msg.type === 'ai' ? (
+                    <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+                  ) : (
+                    <User className="h-3.5 w-3.5 text-primary-foreground" />
+                  )}
+                </div>
+
+                {/* Bubble */}
+                <div
+                  className={cn(
+                    'max-w-[75%] rounded-xl px-4 py-3',
+                    msg.type === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                      : 'bg-card border border-border rounded-tl-sm shadow-sm'
+                  )}
+                >
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                    {msg.content}
+                  </p>
+
+                  {/* Sources */}
+                  {msg.sources && msg.sources.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border space-y-2">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Sources
+                      </p>
+                      {msg.sources.map((src, si) => (
+                        <div
+                          key={si}
+                          className="flex items-start gap-2 text-xs bg-muted rounded-lg px-3 py-2 border-l-2 border-indigo-400"
+                        >
+                          <Quote className="h-3 w-3 flex-shrink-0 mt-0.5 opacity-50" />
+                          <div>
+                            <p className="italic text-muted-foreground">{src.quote}</p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
+                              Session: {src.session_id.substring(0, 12)}...
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Loading indicator */}
+            {loading && (
+              <div className="flex gap-3 justify-start">
+                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
+                  <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+                <Card className="rounded-tl-sm">
+                  <CardContent className="px-4 py-3 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Thinking...</span>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="flex-shrink-0 mt-4">
+          <Card>
+            <CardContent className="p-2 flex gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask anything about your customers..."
+                disabled={loading || !selectedBrandId}
+                className="border-0 shadow-none focus-visible:ring-0 h-10"
+              />
+              <Button
+                type="submit"
+                disabled={loading || !input.trim() || !selectedBrandId}
+                size="default"
+                className="flex-shrink-0"
+              >
+                <Send className="h-4 w-4" />
+                <span className="sr-only">Ask</span>
+              </Button>
+            </CardContent>
+          </Card>
+        </form>
+      </div>
     </div>
   );
 }

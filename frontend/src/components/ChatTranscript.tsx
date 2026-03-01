@@ -1,3 +1,7 @@
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Bot, User } from 'lucide-react';
+
 interface Props {
   messages: Array<Record<string, unknown>> | null;
 }
@@ -5,35 +9,54 @@ interface Props {
 export default function ChatTranscript({ messages }: Props) {
   if (!messages || messages.length === 0) {
     return (
-      <div className="text-gray-400 text-center py-8 text-sm">
+      <div className="text-muted-foreground text-center py-8 text-sm">
         No chat in this session
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {messages.map((msg, idx) => {
-        const role = ((msg.role as string) || (msg.sender as string) || 'unknown').toLowerCase();
-        const content = (msg.content as string) || (msg.message as string) || '';
-        const isAgent = role === 'agent' || role === 'assistant' || role === 'bot';
+        const role = (
+          (msg.role as string) ||
+          (msg.sender as string) ||
+          'unknown'
+        ).toLowerCase();
+        const content =
+          (msg.content as string) || (msg.message as string) || '';
+        const isAgent =
+          role === 'agent' || role === 'assistant' || role === 'bot';
 
         return (
           <div
             key={idx}
-            className={`flex ${isAgent ? 'justify-start' : 'justify-end'}`}
+            className={cn('flex gap-3', isAgent ? 'justify-start' : 'flex-row-reverse')}
           >
+            <Avatar className="h-7 w-7 flex-shrink-0">
+              <AvatarFallback
+                className={cn(
+                  'text-xs',
+                  isAgent
+                    ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300'
+                    : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300'
+                )}
+              >
+                {isAgent ? <Bot className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
+              </AvatarFallback>
+            </Avatar>
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
+              className={cn(
+                'max-w-[80%] rounded-xl px-4 py-2.5 text-sm',
                 isAgent
-                  ? 'bg-gray-100 text-gray-800 rounded-bl-md'
-                  : 'bg-brand-600 text-white rounded-br-md'
-              }`}
+                  ? 'bg-muted text-foreground rounded-tl-sm'
+                  : 'bg-indigo-600 text-white rounded-tr-sm'
+              )}
             >
-              <p className="text-xs font-medium mb-1 opacity-70">
+              <p className="text-[10px] font-semibold mb-1 opacity-60 uppercase tracking-wider">
                 {isAgent ? 'Agent' : 'Customer'}
               </p>
-              <p className="whitespace-pre-wrap">{content}</p>
+              <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
             </div>
           </div>
         );

@@ -1,4 +1,13 @@
-import { SessionDetail } from '../api/client';
+import { SessionDetail } from '@/api/client';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import {
+  FileText,
+  Zap,
+  Bell,
+  MessageSquare,
+  ShoppingCart,
+} from 'lucide-react';
 
 interface Props {
   detail: SessionDetail | null;
@@ -15,7 +24,6 @@ interface TimelineItem {
 function buildTimeline(d: SessionDetail): TimelineItem[] {
   const items: TimelineItem[] = [];
 
-  // Pages
   if (d.pages) {
     d.pages.forEach((p) => {
       items.push({
@@ -27,7 +35,6 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
     });
   }
 
-  // Events
   if (d.events) {
     d.events.forEach((e) => {
       items.push({
@@ -39,7 +46,6 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
     });
   }
 
-  // Interventions / Nudges
   if (d.interventions) {
     d.interventions.forEach((n) => {
       items.push({
@@ -51,7 +57,6 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
     });
   }
 
-  // Chat
   if (d.chat && Array.isArray(d.chat)) {
     d.chat.forEach((msg) => {
       items.push({
@@ -63,7 +68,6 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
     });
   }
 
-  // Order
   if (d.order) {
     items.push({
       time: (d.order.created_at as string) || '',
@@ -73,7 +77,6 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
     });
   }
 
-  // Sort by time
   items.sort((a, b) => {
     if (!a.time) return 1;
     if (!b.time) return -1;
@@ -83,12 +86,15 @@ function buildTimeline(d: SessionDetail): TimelineItem[] {
   return items;
 }
 
-const TYPE_STYLES: Record<string, { dot: string; bg: string }> = {
-  page: { dot: 'bg-blue-500', bg: 'bg-blue-50' },
-  event: { dot: 'bg-purple-500', bg: 'bg-purple-50' },
-  nudge: { dot: 'bg-amber-500', bg: 'bg-amber-50' },
-  chat: { dot: 'bg-green-500', bg: 'bg-green-50' },
-  order: { dot: 'bg-emerald-600', bg: 'bg-emerald-50' },
+const TYPE_CONFIG: Record<
+  string,
+  { icon: React.ElementType; dotColor: string; bgColor: string }
+> = {
+  page: { icon: FileText, dotColor: 'bg-blue-500', bgColor: 'bg-blue-500/10 dark:bg-blue-500/20' },
+  event: { icon: Zap, dotColor: 'bg-purple-500', bgColor: 'bg-purple-500/10 dark:bg-purple-500/20' },
+  nudge: { icon: Bell, dotColor: 'bg-amber-500', bgColor: 'bg-amber-500/10 dark:bg-amber-500/20' },
+  chat: { icon: MessageSquare, dotColor: 'bg-emerald-500', bgColor: 'bg-emerald-500/10 dark:bg-emerald-500/20' },
+  order: { icon: ShoppingCart, dotColor: 'bg-green-600', bgColor: 'bg-green-500/10 dark:bg-green-500/20' },
 };
 
 export default function JourneyTimeline({ detail, loading }: Props) {
@@ -97,10 +103,10 @@ export default function JourneyTimeline({ detail, loading }: Props) {
       <div className="space-y-4 animate-pulse">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex gap-4 items-start">
-            <div className="w-3 h-3 rounded-full bg-gray-200 mt-1.5" />
+            <div className="w-3 h-3 rounded-full bg-muted mt-1.5" />
             <div className="flex-1">
-              <div className="h-4 bg-gray-200 rounded w-48 mb-2" />
-              <div className="h-3 bg-gray-100 rounded w-32" />
+              <div className="h-4 bg-muted rounded w-48 mb-2" />
+              <div className="h-3 bg-muted rounded w-32" />
             </div>
           </div>
         ))}
@@ -109,46 +115,70 @@ export default function JourneyTimeline({ detail, loading }: Props) {
   }
 
   if (!detail) {
-    return <div className="text-gray-400 text-center py-8">No session data</div>;
+    return (
+      <div className="text-muted-foreground text-center py-8 text-sm">
+        No session data
+      </div>
+    );
   }
 
   const items = buildTimeline(detail);
 
   if (items.length === 0) {
-    return <div className="text-gray-400 text-center py-8">No timeline events</div>;
+    return (
+      <div className="text-muted-foreground text-center py-8 text-sm">
+        No timeline events
+      </div>
+    );
   }
 
   return (
     <div className="relative">
       {/* Vertical line */}
-      <div className="absolute left-[7px] top-3 bottom-3 w-px bg-gray-200" />
+      <div className="absolute left-[15px] top-3 bottom-3 w-px bg-border" />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {items.map((item, idx) => {
-          const style = TYPE_STYLES[item.type] || TYPE_STYLES.event;
+          const config = TYPE_CONFIG[item.type] || TYPE_CONFIG.event;
+          const Icon = config.icon;
           return (
-            <div key={idx} className="relative flex gap-4 items-start pl-0">
+            <div key={idx} className="relative flex gap-4 items-start">
               {/* Dot */}
               <div
-                className={`w-3.5 h-3.5 rounded-full ${style.dot} mt-1 flex-shrink-0 ring-2 ring-white z-10`}
-              />
+                className={cn(
+                  'w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0 z-10 ring-4 ring-background',
+                  config.dotColor
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 text-white" />
+              </div>
               {/* Content */}
               <div
-                className={`flex-1 ${style.bg} rounded-lg px-4 py-2.5 border border-gray-100`}
+                className={cn(
+                  'flex-1 rounded-lg px-4 py-2.5 border border-border',
+                  config.bgColor
+                )}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800">{item.title}</span>
-                  {item.time && (
-                    <span className="text-xs text-gray-400 ml-4 flex-shrink-0">
-                      {new Date(item.time).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  )}
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-sm font-medium text-foreground">{item.title}</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Badge variant="outline" className="text-[10px]">
+                      {item.type}
+                    </Badge>
+                    {item.time && (
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
+                        {new Date(item.time).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {item.detail && (
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-3">{item.detail}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
+                    {item.detail}
+                  </p>
                 )}
               </div>
             </div>

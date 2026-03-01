@@ -1,17 +1,20 @@
-import { Segment } from '../api/client';
+import { Segment } from '@/api/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Users, TrendingUp, Activity } from 'lucide-react';
 
 interface Props {
   segments: Segment[];
   loading: boolean;
 }
 
-const PERSONA_COLORS = [
-  { bg: 'bg-indigo-50', border: 'border-indigo-200', accent: 'text-indigo-700', bar: 'bg-indigo-500' },
-  { bg: 'bg-emerald-50', border: 'border-emerald-200', accent: 'text-emerald-700', bar: 'bg-emerald-500' },
-  { bg: 'bg-amber-50', border: 'border-amber-200', accent: 'text-amber-700', bar: 'bg-amber-500' },
-  { bg: 'bg-rose-50', border: 'border-rose-200', accent: 'text-rose-700', bar: 'bg-rose-500' },
-  { bg: 'bg-cyan-50', border: 'border-cyan-200', accent: 'text-cyan-700', bar: 'bg-cyan-500' },
-  { bg: 'bg-purple-50', border: 'border-purple-200', accent: 'text-purple-700', bar: 'bg-purple-500' },
+const PERSONA_ACCENT_COLORS = [
+  { border: 'border-l-indigo-500', badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' },
+  { border: 'border-l-emerald-500', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
+  { border: 'border-l-amber-500', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
+  { border: 'border-l-rose-500', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300' },
+  { border: 'border-l-cyan-500', badge: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' },
+  { border: 'border-l-purple-500', badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' },
 ];
 
 export default function PersonaCards({ segments, loading }: Props) {
@@ -19,11 +22,13 @@ export default function PersonaCards({ segments, loading }: Props) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 animate-pulse">
-            <div className="h-5 bg-gray-200 rounded w-32 mb-4" />
-            <div className="h-4 bg-gray-100 rounded w-20 mb-2" />
-            <div className="h-4 bg-gray-100 rounded w-24" />
-          </div>
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-5 bg-muted rounded w-32 mb-4" />
+              <div className="h-4 bg-muted rounded w-20 mb-2" />
+              <div className="h-4 bg-muted rounded w-24" />
+            </CardContent>
+          </Card>
         ))}
       </div>
     );
@@ -31,48 +36,76 @@ export default function PersonaCards({ segments, loading }: Props) {
 
   if (segments.length === 0) {
     return (
-      <div className="text-gray-400 text-center py-12">No persona data available</div>
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground text-sm">No persona data available</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {segments.map((seg, idx) => {
-        const c = PERSONA_COLORS[idx % PERSONA_COLORS.length];
+        const accent = PERSONA_ACCENT_COLORS[idx % PERSONA_ACCENT_COLORS.length];
         return (
-          <div
+          <Card
             key={seg.segment_name}
-            className={`${c.bg} ${c.border} border rounded-xl p-6 hover:shadow-md transition-shadow`}
+            className={`border-l-4 ${accent.border} hover:shadow-md transition-shadow`}
           >
-            <h3 className={`text-lg font-bold ${c.accent} mb-3`}>{seg.segment_name}</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Count</span>
-                <span className="font-semibold text-gray-800">{seg.count.toLocaleString()}</span>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-base font-semibold text-foreground">
+                  {seg.segment_name}
+                </h3>
+                <Badge className={`text-[10px] ${accent.badge} border-0`}>
+                  {seg.pct.toFixed(1)}%
+                </Badge>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Share</span>
-                <span className="font-semibold text-gray-800">{seg.pct.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Conv Rate</span>
-                <span className="font-semibold text-gray-800">{seg.conversion_rate.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Avg Engagement</span>
-                <span className="font-semibold text-gray-800">{seg.avg_engagement.toFixed(1)}</span>
-              </div>
-              {/* Mini bar for conversion rate */}
-              <div className="pt-2">
-                <div className="w-full bg-white/60 rounded-full h-2">
-                  <div
-                    className={`${c.bar} h-2 rounded-full transition-all`}
-                    style={{ width: `${Math.min(seg.conversion_rate * 2, 100)}%` }}
-                  />
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Users className="h-3.5 w-3.5" />
+                    Count
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {seg.count.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <TrendingUp className="h-3.5 w-3.5" />
+                    Conv Rate
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {seg.conversion_rate.toFixed(1)}%
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Activity className="h-3.5 w-3.5" />
+                    Engagement
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    {seg.avg_engagement.toFixed(1)}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="pt-1">
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div
+                      className="h-1.5 rounded-full bg-foreground/30 transition-all"
+                      style={{ width: `${Math.min(seg.pct, 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         );
       })}
     </div>

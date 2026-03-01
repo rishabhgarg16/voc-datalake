@@ -7,9 +7,10 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://voc:voc_secret@localhost:5432/voc_datalake"
     database_url_sync: str = "postgresql://voc:voc_secret@localhost:5432/voc_datalake"
     anthropic_api_key: str = ""
+    openai_api_key: str = ""
     data_dir: str = "/data"
     enrichment_concurrency: int = 15
-    enrichment_model: str = "claude-haiku-4-5-20241022"
+    enrichment_model: str = "gpt-4o-mini"
 
     # Deployment settings
     environment: Literal["development", "production"] = "development"

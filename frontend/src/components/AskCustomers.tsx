@@ -1,6 +1,14 @@
-import { useState } from 'react';
-import { askCustomers, AskResponse } from '../api/client';
-import { useBrand } from '../App';
+import { useState, useRef, useEffect } from 'react';
+import { askCustomers, AskResponse } from '@/api/client';
+import { useBrand } from '@/App';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Bot, User, Send, Loader2, Sparkles, Quote } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Message {
   type: 'user' | 'ai';
@@ -8,11 +16,25 @@ interface Message {
   sources?: Array<{ quote: string; session_id: string }>;
 }
 
+const SAMPLE_QUESTIONS = [
+  'Why are customers not buying?',
+  'What do customers say about shipping?',
+  'What are the top objections?',
+  'How do returning customers behave?',
+];
+
 export default function AskCustomers() {
   const { selectedBrandId } = useBrand();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,10 +55,13 @@ export default function AskCustomers() {
           sources: res.sources,
         },
       ]);
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev,
-        { type: 'ai', content: 'Sorry, something went wrong. Please try again.' },
+        {
+          type: 'ai',
+          content: 'Sorry, something went wrong. Please try again.',
+        },
       ]);
     } finally {
       setLoading(false);
@@ -45,106 +70,138 @@ export default function AskCustomers() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)]">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-4xl mb-4">💬</p>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              Ask Your Customers
-            </h3>
-            <p className="text-sm text-gray-400 max-w-md mx-auto">
-              Ask any question about your customers and get AI-powered answers with
-              cited quotes from real sessions.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {[
-                'Why are customers not buying?',
-                'What do customers say about shipping?',
-                'What are the top objections?',
-                'How do returning customers behave?',
-              ].map((q) => (
-                <button
-                  key={q}
-                  onClick={() => setInput(q)}
-                  className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[75%] rounded-2xl px-5 py-3 ${
-                msg.type === 'user'
-                  ? 'bg-brand-600 text-white rounded-br-md'
-                  : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm'
-              }`}
-            >
-              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-
-              {/* Sources */}
-              {msg.sources && msg.sources.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Sources
-                  </p>
-                  {msg.sources.map((src, si) => (
-                    <div
-                      key={si}
-                      className="text-xs bg-gray-50 rounded-lg px-3 py-2 border-l-3 border-brand-400"
-                    >
-                      <p className="italic text-gray-600">"{src.quote}"</p>
-                      <p className="text-gray-400 mt-1 font-mono">
-                        Session: {src.session_id.substring(0, 12)}...
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-5 py-3 shadow-sm">
-              <div className="flex items-center gap-2">
-                <div className="spinner" />
-                <span className="text-sm text-gray-500">Thinking...</span>
+      {/* Messages area */}
+      <ScrollArea className="flex-1 pr-4" ref={scrollRef}>
+        <div className="space-y-4 pb-4">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="p-4 rounded-2xl bg-muted mb-4">
+                <Sparkles className="h-8 w-8 text-indigo-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                Ask Your Customers
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md">
+                Ask any question about your customers and get AI-powered answers
+                with cited quotes from real sessions.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {SAMPLE_QUESTIONS.map((q) => (
+                  <Button
+                    key={q}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setInput(q)}
+                    className="h-auto py-1.5 text-xs"
+                  >
+                    {q}
+                  </Button>
+                ))}
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={cn(
+                'flex gap-3',
+                msg.type === 'user' ? 'flex-row-reverse' : 'justify-start'
+              )}
+            >
+              <Avatar className="h-7 w-7 flex-shrink-0 mt-1">
+                <AvatarFallback
+                  className={cn(
+                    'text-xs',
+                    msg.type === 'ai'
+                      ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300'
+                      : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300'
+                  )}
+                >
+                  {msg.type === 'ai' ? (
+                    <Bot className="h-3.5 w-3.5" />
+                  ) : (
+                    <User className="h-3.5 w-3.5" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+
+              <div
+                className={cn(
+                  'max-w-[75%] rounded-xl px-4 py-3',
+                  msg.type === 'user'
+                    ? 'bg-indigo-600 text-white rounded-tr-sm'
+                    : 'bg-card border border-border rounded-tl-sm shadow-sm'
+                )}
+              >
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {msg.content}
+                </p>
+
+                {msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border space-y-2">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Sources
+                    </p>
+                    {msg.sources.map((src, si) => (
+                      <div
+                        key={si}
+                        className="flex items-start gap-2 text-xs bg-muted rounded-lg px-3 py-2 border-l-2 border-indigo-400"
+                      >
+                        <Quote className="h-3 w-3 flex-shrink-0 mt-0.5 opacity-50" />
+                        <div>
+                          <p className="italic text-muted-foreground">{src.quote}</p>
+                          <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
+                            Session: {src.session_id.substring(0, 12)}...
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {loading && (
+            <div className="flex gap-3 justify-start">
+              <Avatar className="h-7 w-7 flex-shrink-0 mt-1">
+                <AvatarFallback className="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-300">
+                  <Bot className="h-3.5 w-3.5" />
+                </AvatarFallback>
+              </Avatar>
+              <Card className="rounded-tl-sm">
+                <CardContent className="px-4 py-3 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Thinking...</span>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Input */}
-      <form
-        onSubmit={handleSubmit}
-        className="flex-shrink-0 bg-white border border-gray-200 rounded-xl p-2 flex gap-2 shadow-sm"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything about your customers..."
-          className="flex-1 px-4 py-2.5 text-sm border-0 focus:outline-none bg-transparent"
-          disabled={loading || !selectedBrandId}
-        />
-        <button
-          type="submit"
-          disabled={loading || !input.trim() || !selectedBrandId}
-          className="px-5 py-2.5 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          Send
-        </button>
+      <form onSubmit={handleSubmit} className="flex-shrink-0 mt-4">
+        <Card>
+          <CardContent className="p-2 flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask anything about your customers..."
+              disabled={loading || !selectedBrandId}
+              className="border-0 shadow-none focus-visible:ring-0 h-10"
+            />
+            <Button
+              type="submit"
+              disabled={loading || !input.trim() || !selectedBrandId}
+              size="default"
+              className="flex-shrink-0"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
       </form>
     </div>
   );

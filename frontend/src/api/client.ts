@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -25,8 +25,8 @@ export interface Overview {
   avg_order_value: number;
   avg_engagement_score: number;
   returning_visitor_pct: number;
-  top_objection: string;
-  top_competitor: string;
+  top_objection: string | null;
+  top_competitor: string | null;
 }
 
 export interface FunnelStage {
@@ -112,15 +112,16 @@ export interface TrendPoint {
 }
 
 export interface SessionListItem {
+  id: number;
   session_id: string;
-  visitor_id: string;
-  started_at: string;
-  ended_at: string;
-  page_count: number;
-  has_chat: boolean;
-  has_order: boolean;
   engagement_score: number;
-  utm_source: string;
+  visit_count: number;
+  is_returning: boolean;
+  has_talked_to_bot: boolean;
+  has_placed_order: boolean;
+  synced_at: string;
+  scroll_percentage: number;
+  time_on_page_ms: number;
   [key: string]: unknown;
 }
 
@@ -135,7 +136,7 @@ export interface SessionDetail {
   pages: Array<Record<string, unknown>>;
   events: Array<Record<string, unknown>>;
   interventions: Array<Record<string, unknown>>;
-  chat: Array<Record<string, unknown>> | null;
+  chat: Record<string, unknown> | null;
   enrichment: Record<string, unknown> | null;
   order: Record<string, unknown> | null;
 }
@@ -148,57 +149,120 @@ export interface AskResponse {
 /* ── API functions ────────────────────────────────────────────── */
 
 export const fetchBrands = () =>
-  api.get<Brand[]>('/api/brands').then((r) => r.data);
+  api.get('/api/brands').then((r) => r.data.brands as Brand[]);
 
 export const fetchOverview = (brandId: number) =>
-  api.get<Overview>(`/api/brands/${brandId}/overview`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/overview`).then((r) => {
+    const d = r.data;
+    return {
+      ...d.kpis,
+      top_objection: d.top_objection?.objection || null,
+      top_competitor: d.top_competitor?.competitor_name || null,
+    } as Overview;
+  });
 
 export const fetchFunnel = (brandId: number) =>
-  api.get<Funnel>(`/api/brands/${brandId}/funnel`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/funnel`).then((r) => {
+    const stages = r.data.stages as Array<{ stage: string; count: number }>;
+    const mapped: FunnelStage[] = stages.map((s, i) => ({
+      name: s.stage.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+      count: s.count,
+      drop_off_pct: i > 0 ? ((stages[i - 1].count - s.count) / stages[i - 1].count) * 100 : 0,
+    }));
+    return { stages: mapped } as Funnel;
+  });
 
 export const fetchChannelVoC = (brandId: number) =>
-  api.get<ChannelVoC[]>(`/api/brands/${brandId}/channel-voc`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/channel-voc`).then((r) => {
+    const channels = r.data.channels as Array<Record<string, unknown>>;
+    return channels.map((c) => ({
+      utm_source: (c.utm_source as string) || 'direct',
+      session_count: c.session_count as number,
+      chat_count: c.chat_count as number,
+      order_count: c.order_count as number,
+      conversion_rate: c.conversion_rate as number,
+      total_revenue: c.total_revenue as number,
+      avg_engagement: (c.avg_engagement_score as number) || 0,
+      top_objections: (c.top_objections as string[]) || [],
+    })) as ChannelVoC[];
+  });
 
 export const fetchIntents = (brandId: number) =>
-  api.get<Intent[]>(`/api/brands/${brandId}/voc/intents`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/voc/intents`).then((r) => {
+    const intents = r.data.intents as Array<Record<string, unknown>>;
+    return intents.map((i) => ({
+      primary_intent: i.primary_intent as string,
+      secondary_intent: i.secondary_intent as string,
+      count: i.intent_count as number,
+      conversion_count: i.conversion_count as number,
+    })) as Intent[];
+  });
 
 export const fetchObjections = (brandId: number) =>
-  api.get<Objection[]>(`/api/brands/${brandId}/voc/objections`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/voc/objections`).then((r) => {
+    return (r.data.objections || []) as Objection[];
+  });
 
 export const fetchNonBuyers = (brandId: number) =>
-  api.get<NonBuyer[]>(`/api/brands/${brandId}/voc/non-buyers`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/voc/non-buyers`).then((r) => {
+    return (r.data.blockers || []) as NonBuyer[];
+  });
 
 export const fetchInfoGaps = (brandId: number) =>
-  api.get<InfoGap[]>(`/api/brands/${brandId}/voc/info-gaps`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/voc/info-gaps`).then((r) => {
+    return (r.data.gaps || []) as InfoGap[];
+  });
 
 export const fetchSegments = (brandId: number) =>
-  api.get<Segment[]>(`/api/brands/${brandId}/segments`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/segments`).then((r) => {
+    const segs = r.data.segments as Array<Record<string, unknown>>;
+    return segs.map((s) => ({
+      segment_name: s.segment as string,
+      count: s.session_count as number,
+      pct: (s.percentage as number) * 100,
+      conversion_rate: 0,
+      avg_engagement: 0,
+    })) as Segment[];
+  });
 
 export const fetchProducts = (brandId: number) =>
-  api.get<Product[]>(`/api/brands/${brandId}/products`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/products`).then((r) => {
+    return (r.data.products || []) as Product[];
+  });
 
 export const fetchInterventions = (brandId: number) =>
-  api.get<Intervention[]>(`/api/brands/${brandId}/interventions`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/interventions`).then((r) => {
+    const interventions = r.data.interventions as Array<Record<string, unknown>>;
+    return interventions.map((i) => ({
+      trigger_type: i.trigger_type as string,
+      triggered_count: i.triggered_count as number,
+      chat_after: i.sessions_with_subsequent_chat as number,
+      order_after: i.sessions_with_order as number,
+      conversion_lift: 0,
+    })) as Intervention[];
+  });
 
 export const fetchTrends = (brandId: number) =>
-  api.get<TrendPoint[]>(`/api/brands/${brandId}/trends`).then((r) => r.data);
+  api.get(`/api/brands/${brandId}/trends`).then((r) => {
+    return (r.data.trends || []) as TrendPoint[];
+  });
 
 export const fetchSessions = (brandId: number, page = 1, hasChat?: boolean) => {
   const params: Record<string, string | number | boolean> = { page };
   if (hasChat !== undefined) params.has_chat = hasChat;
   return api
-    .get<SessionsResponse>(`/api/brands/${brandId}/sessions`, { params })
-    .then((r) => r.data);
+    .get(`/api/brands/${brandId}/sessions`, { params })
+    .then((r) => r.data as SessionsResponse);
 };
 
 export const fetchSessionDetail = (brandId: number, sessionId: string) =>
   api
-    .get<SessionDetail>(`/api/brands/${brandId}/sessions/${sessionId}`)
-    .then((r) => r.data);
+    .get(`/api/brands/${brandId}/sessions/${sessionId}`)
+    .then((r) => r.data as SessionDetail);
 
 export const askCustomers = (brandId: number, question: string) =>
   api
-    .post<AskResponse>(`/api/brands/${brandId}/ask`, { question })
-    .then((r) => r.data);
+    .post(`/api/brands/${brandId}/ask`, { question })
+    .then((r) => r.data as AskResponse);
 
 export default api;
