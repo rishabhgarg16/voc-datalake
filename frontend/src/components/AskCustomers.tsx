@@ -131,27 +131,32 @@ export default function AskCustomers() {
                   'max-w-[75%] rounded-xl px-4 py-3',
                   msg.type === 'user'
                     ? 'bg-indigo-600 text-white rounded-tr-sm'
-                    : 'bg-muted text-foreground rounded-tl-sm shadow-sm'
+                    : 'bg-zinc-100 dark:bg-zinc-800 rounded-tl-sm shadow-sm'
                 )}
               >
-                <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
+                <div className={cn(
+                  "text-sm whitespace-pre-wrap leading-relaxed",
+                  msg.type === 'user'
+                    ? 'text-white'
+                    : 'text-zinc-900 dark:text-zinc-100'
+                )}>
                   {msg.content}
-                </p>
+                </div>
 
                 {msg.sources && msg.sources.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border space-y-2">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <div className="mt-3 pt-3 border-t border-zinc-300 dark:border-zinc-600 space-y-2">
+                    <p className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                       Sources
                     </p>
                     {msg.sources.map((src, si) => (
                       <div
                         key={si}
-                        className="flex items-start gap-2 text-xs bg-muted rounded-lg px-3 py-2 border-l-2 border-indigo-400"
+                        className="flex items-start gap-2 text-xs bg-zinc-200 dark:bg-zinc-700 rounded-lg px-3 py-2 border-l-2 border-indigo-400"
                       >
-                        <Quote className="h-3 w-3 flex-shrink-0 mt-0.5 opacity-50" />
+                        <Quote className="h-3 w-3 flex-shrink-0 mt-0.5 text-zinc-400" />
                         <div>
-                          <p className="italic text-muted-foreground">{src.quote}</p>
-                          <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
+                          <p className="italic text-zinc-600 dark:text-zinc-300">{src.quote}</p>
+                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1 font-mono">
                             Session: {src.session_id.substring(0, 12)}...
                           </p>
                         </div>
