@@ -199,3 +199,28 @@ async def competitors(brand_id: int):
         logger.exception("Failed to fetch competitor data")
         raise HTTPException(status_code=500, detail="Database query failed")
     return {"brand_id": brand_id, "competitors": rows}
+
+
+@router.get("/brands/{brand_id}/voc/personas")
+async def personas(brand_id: int):
+    brand = await fetch_one("SELECT id FROM brands WHERE id = $1", brand_id)
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand not found")
+
+    try:
+        rows = await fetch_all(
+            """
+            SELECT tag AS persona, COUNT(*) AS count,
+                   COUNT(*) FILTER (WHERE ec.outcome = 'purchased') AS converted,
+                   ROUND(AVG(ec.sentiment_score)::numeric, 3) AS avg_sentiment
+            FROM enriched_conversations ec, UNNEST(ec.persona_tags) AS tag
+            WHERE ec.brand_id = $1
+            GROUP BY tag
+            ORDER BY count DESC
+            """,
+            brand_id,
+        )
+    except Exception as e:
+        logger.exception("Failed to fetch persona data")
+        raise HTTPException(status_code=500, detail="Database query failed")
+    return {"brand_id": brand_id, "personas": rows}
