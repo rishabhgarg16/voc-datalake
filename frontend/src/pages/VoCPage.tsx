@@ -87,14 +87,14 @@ export default function VoCPage() {
 
   /* ── Loading skeleton ──────────────────────────────────────── */
   const TableSkeleton = () => (
-    <Card className="animate-pulse border-zinc-800/60">
+    <Card className="animate-pulse border-border/60">
       <CardContent className="p-6">
         <div className="space-y-3">
-          <div className="h-4 bg-zinc-800 rounded w-full" />
-          <div className="h-4 bg-zinc-800 rounded w-5/6" />
-          <div className="h-4 bg-zinc-800 rounded w-4/6" />
-          <div className="h-4 bg-zinc-800 rounded w-full" />
-          <div className="h-4 bg-zinc-800 rounded w-3/6" />
+          <div className="h-4 bg-muted rounded w-full" />
+          <div className="h-4 bg-muted rounded w-5/6" />
+          <div className="h-4 bg-muted rounded w-4/6" />
+          <div className="h-4 bg-muted rounded w-full" />
+          <div className="h-4 bg-muted rounded w-3/6" />
         </div>
       </CardContent>
     </Card>
@@ -102,7 +102,7 @@ export default function VoCPage() {
 
   /* ── Empty state ───────────────────────────────────────────── */
   const EmptyState = ({ message }: { message: string }) => (
-    <Card className="border-zinc-800/60">
+    <Card className="border-border/60">
       <CardContent className="flex flex-col items-center justify-center py-16 gap-3">
         <p className="text-muted-foreground text-sm">{message}</p>
         <Badge variant="secondary" className="text-xs">
@@ -143,7 +143,7 @@ export default function VoCPage() {
   return (
     <div className="space-y-0">
       {/* ── Gradient Header Section ──────────────────────────────── */}
-      <div className="bg-gradient-to-r from-zinc-900 via-rose-950/30 to-zinc-900 -mx-6 -mt-6 px-6 pt-6 pb-8 mb-6 rounded-b-xl border-b border-rose-500/10">
+      <div className="bg-gradient-to-r from-rose-50 via-rose-100/50 to-rose-50 dark:from-zinc-900 dark:via-rose-950/30 dark:to-zinc-900 -mx-6 -mt-6 px-6 pt-6 pb-8 mb-6 rounded-b-xl border-b border-rose-200 dark:border-rose-500/10">
         {/* Killer Feature badge */}
         <div className="mb-4">
           <Badge className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20 text-[10px] uppercase tracking-widest font-semibold px-2.5 py-0.5">
@@ -189,8 +189,8 @@ export default function VoCPage() {
 
       {/* ── Tabs ─────────────────────────────────────────────────── */}
       <Tabs defaultValue="objections" className="space-y-4">
-        <TabsList className="bg-zinc-900 border border-zinc-800">
-          <TabsTrigger value="objections" className="gap-1.5 data-[state=active]:bg-zinc-800">
+        <TabsList className="bg-muted border border-border">
+          <TabsTrigger value="objections" className="gap-1.5 data-[state=active]:bg-muted">
             <ShieldAlert className="h-3.5 w-3.5" />
             Objections
             {objections.length > 0 && (
@@ -199,7 +199,7 @@ export default function VoCPage() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="infogaps" className="gap-1.5 data-[state=active]:bg-zinc-800">
+          <TabsTrigger value="infogaps" className="gap-1.5 data-[state=active]:bg-muted">
             <Search className="h-3.5 w-3.5" />
             Info Gaps
             {infoGaps.length > 0 && (
@@ -208,7 +208,7 @@ export default function VoCPage() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="intents" className="gap-1.5 data-[state=active]:bg-zinc-800">
+          <TabsTrigger value="intents" className="gap-1.5 data-[state=active]:bg-muted">
             <TrendingUp className="h-3.5 w-3.5" />
             Intents
             {intents.length > 0 && (
@@ -234,8 +234,8 @@ export default function VoCPage() {
                   <Card
                     key={idx}
                     className={cn(
-                      'border-zinc-800/60 transition-all duration-200 cursor-pointer hover:border-zinc-700/80',
-                      isExpanded && 'border-zinc-700 ring-1 ring-zinc-700/50'
+                      'border-border/60 transition-all duration-200 cursor-pointer hover:border-muted-foreground/30',
+                      isExpanded && 'border-muted-foreground/20 ring-1 ring-muted-foreground/10'
                     )}
                     onClick={() => setExpandedIdx(isExpanded ? null : idx)}
                   >
@@ -243,7 +243,7 @@ export default function VoCPage() {
                       {/* Collapsed row */}
                       <div className="flex items-center gap-4 px-5 py-4">
                         {/* Rank */}
-                        <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                        <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
                           <span className="text-xs font-bold text-zinc-400 font-mono">
                             #{idx + 1}
                           </span>
@@ -266,7 +266,7 @@ export default function VoCPage() {
                           </div>
 
                           {/* Progress bar */}
-                          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                             <div
                               className={cn(
                                 'h-full rounded-full transition-all duration-500',
@@ -305,7 +305,7 @@ export default function VoCPage() {
 
                       {/* Expanded content */}
                       {isExpanded && (
-                        <div className="px-5 pb-4 pt-0 border-t border-zinc-800/60">
+                        <div className="px-5 pb-4 pt-0 border-t border-border/60">
                           <div className="pt-4 space-y-3">
                             <p className="text-sm text-muted-foreground">
                               This objection was mentioned{' '}
@@ -315,7 +315,7 @@ export default function VoCPage() {
                               across conversations.
                             </p>
                             <div className="grid grid-cols-3 gap-4">
-                              <div className="bg-zinc-800/50 rounded-lg p-3">
+                              <div className="bg-muted/50 rounded-lg p-3">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
                                   Mentions
                                 </p>
@@ -323,7 +323,7 @@ export default function VoCPage() {
                                   {obj.mention_count}
                                 </p>
                               </div>
-                              <div className="bg-zinc-800/50 rounded-lg p-3">
+                              <div className="bg-muted/50 rounded-lg p-3">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
                                   Resolved
                                 </p>
@@ -331,7 +331,7 @@ export default function VoCPage() {
                                   {obj.resolved_count}
                                 </p>
                               </div>
-                              <div className="bg-zinc-800/50 rounded-lg p-3">
+                              <div className="bg-muted/50 rounded-lg p-3">
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
                                   Converted
                                 </p>
@@ -358,7 +358,7 @@ export default function VoCPage() {
           ) : infoGaps.length === 0 ? (
             <EmptyState message="No info gap data available" />
           ) : (
-            <Card className="border-zinc-800/60">
+            <Card className="border-border/60">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
                   Information Gaps
@@ -367,7 +367,7 @@ export default function VoCPage() {
               <CardContent className="px-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-zinc-800/60 hover:bg-transparent">
+                    <TableRow className="border-border/60 hover:bg-transparent">
                       <TableHead className="pl-6">Question</TableHead>
                       <TableHead className="text-right">Frequency</TableHead>
                       <TableHead>Agent Quality</TableHead>
@@ -377,7 +377,7 @@ export default function VoCPage() {
                   </TableHeader>
                   <TableBody>
                     {infoGaps.map((gap, idx) => (
-                      <TableRow key={idx} className="border-zinc-800/60">
+                      <TableRow key={idx} className="border-border/60">
                         <TableCell className="pl-6 font-medium text-foreground max-w-sm">
                           {gap.customer_question}
                         </TableCell>
@@ -416,7 +416,7 @@ export default function VoCPage() {
           ) : intents.length === 0 ? (
             <EmptyState message="No intent data available" />
           ) : (
-            <Card className="border-zinc-800/60">
+            <Card className="border-border/60">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground">
                   Intent Distribution
@@ -425,7 +425,7 @@ export default function VoCPage() {
               <CardContent className="px-0">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-zinc-800/60 hover:bg-transparent">
+                    <TableRow className="border-border/60 hover:bg-transparent">
                       <TableHead className="pl-6">Intent</TableHead>
                       <TableHead>Sub-Intent</TableHead>
                       <TableHead className="text-right">Count</TableHead>
@@ -440,7 +440,7 @@ export default function VoCPage() {
                           ? ((intent.conversion_count / intent.count) * 100).toFixed(1)
                           : '0.0';
                       return (
-                        <TableRow key={idx} className="border-zinc-800/60">
+                        <TableRow key={idx} className="border-border/60">
                           <TableCell className="pl-6 font-medium text-foreground">
                             {intent.primary_intent}
                           </TableCell>
@@ -493,7 +493,7 @@ function StatCard({
   label: string;
 }) {
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-lg px-4 py-3 backdrop-blur-sm">
+    <div className="bg-card/60 border border-border rounded-lg px-4 py-3 backdrop-blur-sm">
       <div className="flex items-center gap-2 mb-1.5">{icon}</div>
       <p className="text-xl font-mono font-bold text-foreground tracking-tight">
         {value}

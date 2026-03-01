@@ -110,19 +110,19 @@ export default function AskPage() {
 
         {/* Data Context Pills */}
         <div className="flex flex-wrap items-center gap-2 mt-3">
-          <span className="inline-flex items-center gap-1.5 bg-zinc-800/60 border border-zinc-700/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 bg-muted/60 border border-border/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
             <MessageSquare className="h-3 w-3 text-blue-400" />
             1,877 chat transcripts
           </span>
-          <span className="inline-flex items-center gap-1.5 bg-zinc-800/60 border border-zinc-700/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 bg-muted/60 border border-border/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
             <Activity className="h-3 w-3 text-violet-400" />
             57,243 sessions
           </span>
-          <span className="inline-flex items-center gap-1.5 bg-zinc-800/60 border border-zinc-700/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 bg-muted/60 border border-border/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
             <ShoppingCart className="h-3 w-3 text-amber-400" />
             3,372 orders
           </span>
-          <span className="inline-flex items-center gap-1.5 bg-zinc-800/60 border border-zinc-700/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 bg-muted/60 border border-border/50 rounded-full px-3 py-1 text-xs text-muted-foreground">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -210,7 +210,7 @@ export default function AskPage() {
                 <div className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500/30 to-violet-500/30 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-1">
                   <Bot className="h-3.5 w-3.5 text-indigo-300" />
                 </div>
-                <Card className="rounded-tl-sm border-zinc-800/60">
+                <Card className="rounded-tl-sm border-border/60">
                   <CardContent className="px-4 py-3 flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
                     <span className="text-sm text-muted-foreground">Analyzing your data...</span>
@@ -229,7 +229,7 @@ export default function AskPage() {
                 key={q}
                 type="button"
                 onClick={() => handleChipClick(q)}
-                className="text-xs bg-zinc-800/60 hover:bg-zinc-700/60 border border-zinc-700/50 hover:border-zinc-600/50 text-muted-foreground hover:text-foreground rounded-full px-3 py-1.5 transition-colors duration-150 max-w-xs truncate"
+                className="text-xs bg-muted/60 hover:bg-accent border border-border/50 hover:border-border text-muted-foreground hover:text-foreground rounded-full px-3 py-1.5 transition-colors duration-150 max-w-xs truncate"
               >
                 {q}
               </button>
@@ -239,7 +239,7 @@ export default function AskPage() {
 
         {/* Input */}
         <form ref={formRef} onSubmit={handleSubmit} className="flex-shrink-0 mt-2">
-          <Card className="border-zinc-800/60">
+          <Card className="border-border/60">
             <CardContent className="p-2 flex gap-2">
               <Input
                 value={input}
