@@ -61,7 +61,7 @@ export default function VoCPage() {
   /* derived stats */
   const totalChats = useMemo(() => {
     const total = objections.reduce((s, o) => s + o.mention_count, 0);
-    return total > 0 ? total : 1877;
+    return total > 0 ? total : 0;
   }, [objections]);
 
   const totalBlockers = objections.length;
@@ -71,13 +71,12 @@ export default function VoCPage() {
       (s, o) => s + (o.mention_count - o.converted_count),
       0
     );
-    return nb > 0 ? nb : 1243;
+    return nb > 0 ? nb : 0;
   }, [objections]);
 
   const recoverableRevenue = useMemo(() => {
-    /* rough placeholder: avg AOV ~$65 x non-converted mentions */
     const val = nonBuyerConversations * 65;
-    return val > 0 ? val : 80795;
+    return val > 0 ? val : 0;
   }, [nonBuyerConversations]);
 
   const maxMentionCount = useMemo(
@@ -136,14 +135,14 @@ export default function VoCPage() {
       case 'good':
         return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
       default:
-        return 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   return (
     <div className="space-y-0">
       {/* ── Gradient Header Section ──────────────────────────────── */}
-      <div className="bg-gradient-to-r from-rose-50 via-rose-100/50 to-rose-50 dark:from-zinc-900 dark:via-rose-950/30 dark:to-zinc-900 -mx-6 -mt-6 px-6 pt-6 pb-8 mb-6 rounded-b-xl border-b border-rose-200 dark:border-rose-500/10">
+      <div className="bg-gradient-to-r from-rose-50 via-rose-100/50 to-rose-50 dark:from-background dark:via-rose-950/30 dark:to-background -mx-6 -mt-6 px-6 pt-6 pb-8 mb-6 rounded-b-xl border-b border-rose-200 dark:border-rose-500/10">
         {/* Killer Feature badge */}
         <div className="mb-4">
           <Badge className="bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20 text-[10px] uppercase tracking-widest font-semibold px-2.5 py-0.5">
@@ -244,7 +243,7 @@ export default function VoCPage() {
                       <div className="flex items-center gap-4 px-5 py-4">
                         {/* Rank */}
                         <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                          <span className="text-xs font-bold text-zinc-400 font-mono">
+                          <span className="text-xs font-bold text-muted-foreground font-mono">
                             #{idx + 1}
                           </span>
                         </div>

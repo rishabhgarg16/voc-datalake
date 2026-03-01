@@ -30,23 +30,23 @@ import { cn } from '@/lib/utils';
 import { Minus } from 'lucide-react';
 
 const PIE_COLORS = [
-  '#6366f1',
+  '#3b82f6',
   '#10b981',
-  '#f59e0b',
-  '#ef4444',
   '#8b5cf6',
-  '#ec4899',
-  '#14b8a6',
-  '#f97316',
+  '#f59e0b',
+  '#f43f5e',
+  '#3b82f6',
+  '#10b981',
+  '#8b5cf6',
 ];
 
 /* ── Sentiment badge styling ────────────────────────────────── */
 
 function getSentimentStyle(sentiment: string) {
   const s = sentiment.trim().toLowerCase();
-  if (s === 'negative') return 'bg-red-500/15 text-red-400 border-red-500/30';
-  if (s === 'positive') return 'bg-green-500/15 text-green-400 border-green-500/30';
-  return 'bg-slate-500/15 text-slate-400 border-slate-500/30'; // neutral / other
+  if (s === 'negative') return 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30';
+  if (s === 'positive') return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+  return 'bg-muted text-muted-foreground border-border';
 }
 
 export default function CompetitorsPage() {

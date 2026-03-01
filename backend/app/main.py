@@ -41,3 +41,14 @@ app.include_router(ask.router, prefix="/api")
 @app.get("/api/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/api/debug-db")
+async def debug_db():
+    try:
+        p = await get_pool()
+        async with p.acquire() as conn:
+            row = await conn.fetchrow("SELECT 1 as ok, current_database() as db, version() as v")
+            return {"status": "connected", "db": row["db"], "version": row["v"][:50]}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "type": type(e).__name__}

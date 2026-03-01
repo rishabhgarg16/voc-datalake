@@ -243,7 +243,7 @@ export default function ChannelPage() {
                     color: 'hsl(var(--card-foreground))',
                   }}
                 />
-                <Bar dataKey="orders" fill="#6366f1" radius={[0, 6, 6, 0]} barSize={24} />
+                <Bar dataKey="orders" fill="#3b82f6" radius={[0, 6, 6, 0]} barSize={24} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
