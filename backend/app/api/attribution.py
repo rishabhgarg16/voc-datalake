@@ -32,26 +32,29 @@ async def channel_voc(
             brand_id,
         )
 
-        # For each channel, get top objections by joining enriched_conversations
-        # with session_pages via user_sessions
-        channel_objections = await fetch_all(
-            """
-            SELECT
-                COALESCE(sp.utm_source, 'direct') AS utm_source,
-                obj->>'objection' AS objection,
-                COUNT(*) AS cnt
-            FROM enriched_conversations ec
-            JOIN user_sessions us
-                ON us.session_id = ec.session_id AND us.brand_id = ec.brand_id
-            JOIN session_pages sp ON sp.session_id = us.id
-            CROSS JOIN jsonb_array_elements(ec.objections) AS obj
-            WHERE ec.brand_id = $1
-              AND jsonb_array_length(ec.objections) > 0
-            GROUP BY COALESCE(sp.utm_source, 'direct'), obj->>'objection'
-            ORDER BY COALESCE(sp.utm_source, 'direct'), cnt DESC
-            """,
-            brand_id,
-        )
+        # For each channel, get top objections (may be empty if enrichment hasn't run)
+        channel_objections = []
+        try:
+            channel_objections = await fetch_all(
+                """
+                SELECT
+                    COALESCE(sp.utm_source, 'direct') AS utm_source,
+                    obj->>'objection' AS objection,
+                    COUNT(*) AS cnt
+                FROM enriched_conversations ec
+                JOIN user_sessions us
+                    ON us.session_id = ec.session_id AND us.brand_id = ec.brand_id
+                JOIN session_pages sp ON sp.session_id = us.id
+                CROSS JOIN jsonb_array_elements(ec.objections) AS obj
+                WHERE ec.brand_id = $1
+                  AND jsonb_array_length(ec.objections) > 0
+                GROUP BY COALESCE(sp.utm_source, 'direct'), obj->>'objection'
+                ORDER BY COALESCE(sp.utm_source, 'direct'), cnt DESC
+                """,
+                brand_id,
+            )
+        except Exception:
+            pass  # enrichment not run yet
     except Exception as e:
         logger.exception("Failed to fetch channel VoC data")
         raise HTTPException(status_code=500, detail="Database query failed")

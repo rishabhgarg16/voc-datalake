@@ -21,32 +21,40 @@ async def brand_overview(brand_id: int):
             "SELECT * FROM mv_brand_overview WHERE brand_id = $1", brand_id
         )
 
-        # Top objection from enriched_conversations
-        top_objection = await fetch_one(
-            """
-            SELECT obj->>'objection' AS objection, COUNT(*) AS cnt
-            FROM enriched_conversations ec,
-                 jsonb_array_elements(ec.objections) AS obj
-            WHERE ec.brand_id = $1
-            GROUP BY obj->>'objection'
-            ORDER BY cnt DESC
-            LIMIT 1
-            """,
-            brand_id,
-        )
+        # Top objection from enriched_conversations (may be empty)
+        top_objection = None
+        try:
+            top_objection = await fetch_one(
+                """
+                SELECT obj->>'objection' AS objection, COUNT(*) AS cnt
+                FROM enriched_conversations ec,
+                     jsonb_array_elements(ec.objections) AS obj
+                WHERE ec.brand_id = $1
+                GROUP BY obj->>'objection'
+                ORDER BY cnt DESC
+                LIMIT 1
+                """,
+                brand_id,
+            )
+        except Exception:
+            pass  # enriched_conversations may not exist or be empty
 
-        # Top competitor
-        top_competitor = await fetch_one(
-            """
-            SELECT competitor_name, COUNT(*) AS cnt
-            FROM competitor_mentions
-            WHERE brand_id = $1
-            GROUP BY competitor_name
-            ORDER BY cnt DESC
-            LIMIT 1
-            """,
-            brand_id,
-        )
+        # Top competitor (may be empty)
+        top_competitor = None
+        try:
+            top_competitor = await fetch_one(
+                """
+                SELECT competitor_name, COUNT(*) AS cnt
+                FROM competitor_mentions
+                WHERE brand_id = $1
+                GROUP BY competitor_name
+                ORDER BY cnt DESC
+                LIMIT 1
+                """,
+                brand_id,
+            )
+        except Exception:
+            pass
     except Exception as e:
         logger.exception("Failed to fetch brand overview data")
         raise HTTPException(status_code=500, detail="Database query failed")
